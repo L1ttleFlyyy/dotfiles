@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+# Read input either from argument or stdin
+if [ -t 0 ]; then
+    # Terminal input (argument)
+    if [ $# -eq 0 ]; then
+        echo "Usage: oscp [text] or pipe input to oscp" >&2
+        exit 1
+    fi
+    buffer="$1"
+else
+    # Pipe input
+    buffer=$(cat)
+fi
+
+# Encode and send OSC52 sequence
+# Using printf to ensure consistent behavior across shells
+printf "\033]52;c;%s\a" "$(printf "%s" "$buffer" | base64 | tr -d '\n')"

@@ -1,0 +1,12 @@
+.local/share/
+.local/state/
+.var/
+.antigen/
+.vim/
+.dbus/
+.vnc/
+.cache/
+.mozilla/
+.vscode-server/
+Library/
+Perforce/

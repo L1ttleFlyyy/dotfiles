@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+
+# tmux-broadcast - Send commands to all tmux panes across all sessions
+# Usage: tmux-broadcast [-v] "command"
+
+set -u  # Exit on undefined variable
+
+# Help message
+show_help() {
+    cat << EOF
+Usage: tmux-broadcast [-v] "command"
+
+Send a command to all tmux panes in all sessions.
+
+Options:
+    -h, --help      Show this help message
+    -v, --verbose   Show detailed progress and execute command locally first
+
+Example:
+    tmux-broadcast "source ~/.zshrc"
+    tmux-broadcast -v "pwd"
+EOF
+}
+
+# Parse command line arguments
+VERBOSE=false
+CMD=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -*)
+            echo "Error: Unknown option $1" >&2
+            show_help >&2
+            exit 1
+            ;;
+        *)
+            if [ -z "$CMD" ]; then
+                CMD="$1"
+            else
+                echo "Error: Unexpected argument '$1'" >&2
+                show_help >&2
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+
+
+# Check if running inside tmux
+if [ -n "${TMUX:-}" ] && [ "$VERBOSE" = true ] ; then
+    echo "Error: verbose mode cannot be used inside tmux." >&2
+    echo "Please run it from your regular terminal." >&2
+    exit 1
+fi
+
+
+info() {
+    if [ "$VERBOSE" = true ]; then
+        echo "$1"
+    fi
+}
+
+# Check if a command was provided
+if [ -z "$CMD" ]; then
+    echo "Error: No command provided" >&2
+    show_help >&2
+    exit 1
+fi
+
+# Check if tmux is running
+if ! tmux has-session 2>/dev/null; then
+    echo "Error: No tmux sessions found" >&2
+    exit 1
+fi
+
+info "tmux is running and has sessions"
+
+# Get list of sessions
+sessions=($(tmux list-sessions -F "#{session_name}" 2>/dev/null))
+if [ ${#sessions[@]} -eq 0 ]; then
+    echo "Error: Failed to get session list" >&2
+    exit 1
+fi
+
+info "Found sessions: ${sessions[*]}"
+
+if $VERBOSE; then
+    info "Executing '$CMD' locally first..."
+    eval "$SHELL -c '$CMD'"
+    exit_status=$?
+    
+    if [ $exit_status -ne 0 ]; then
+        echo "Command failed locally with exit status $exit_status" >&2
+        read -p "Do you still want to proceed sending it to tmux panes? (y/N) " proceed
+        if [[ ! $proceed =~ ^[Yy]$ ]]; then
+            info "Operation cancelled"
+            exit 1
+        fi
+    else
+        info "Command executed successfully locally"
+        read -p "Send '$CMD' to all tmux panes? (y/N) " proceed
+        if [[ ! $proceed =~ ^[Yy]$ ]]; then
+            info "Operation cancelled"
+            exit 1
+        fi
+    fi
+    info "Preparing to send command to all sessions..."
+fi
+
+current_pane=0
+# Loop through each session
+for session in "${sessions[@]}"; do
+    # Get list of windows
+    windows=($(tmux list-windows -t "$session" -F "#{window_index}" 2>/dev/null))
+    info "Processing session: $session with ${#windows[@]} windows"
+    
+    # Loop through each window
+    for window in "${windows[@]}"; do
+        # Get list of panes
+        panes=($(tmux list-panes -t "$session:$window" -F "#{pane_index}" 2>/dev/null))
+        info "Processing window: $session:$window with ${#panes[@]} panes"
+        
+        # Loop through each pane
+        for pane in "${panes[@]}"; do
+            ((current_pane++))
+            info "Sending to pane $current_pane (session:$session, window:$window, pane:$pane)..."
+            if $VERBOSE; then
+                if ! tmux send-keys -t "$session:$window.$pane" "$CMD" C-m; then
+                    echo "Warning: Failed to send command to pane $session:$window.$pane" >&2
+                fi
+            else
+                tmux send-keys -t "$session:$window.$pane" "$CMD" C-m & #non-blocking
+            fi
+        done
+    done
+done
+
+info "Command '$CMD' sent to $current_pane panes in all sessions"
+exit 0

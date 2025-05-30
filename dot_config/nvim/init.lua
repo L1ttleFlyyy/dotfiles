@@ -1,0 +1,556 @@
+-- ===========================================
+-- Minimal Neovim Configuration
+-- ===========================================
+
+-- ===========================================
+-- General Settings
+-- ===========================================
+-- Leader Key
+vim.g.mapleader = ","
+
+-- Disable Mouse
+vim.opt.mouse = ""
+
+-- UI Settings
+vim.opt.number = true -- Show line numbers
+vim.opt.relativenumber = true -- Show relative line numbers
+vim.opt.scrolloff = 12 -- Keep cursor centered
+vim.opt.cursorline = true -- Highlight the current line
+vim.opt.termguicolors = true -- Better color support
+vim.opt.linebreak = true -- Wrap long lines at word boundaries
+vim.opt.showmode = false -- Don't show mode since we have lualine
+vim.opt.cmdheight = 1 -- Command line height
+
+-- Indentation
+vim.opt.tabstop = 8 -- Display existing tabs as 8 spaces
+vim.opt.softtabstop = 4 -- Number of spaces per Tab press
+vim.opt.shiftwidth = 4 -- Number of spaces for each step of (auto)indent
+vim.opt.expandtab = true -- Convert tabs to spaces
+vim.opt.autoindent = true -- Copy indent from current line when starting new line
+-- vim.opt.smartindent = true     -- Smart auto-indenting; use nvim-treesitter instead!
+
+-- Show whitespace characters
+vim.opt.list = true
+vim.opt.listchars = {
+    tab = "▸ ",
+    trail = "·",
+    extends = ">",
+    precedes = "<",
+    nbsp = "±"
+}
+
+-- Allow h, l, Left, Right to move across line boundaries
+vim.opt.whichwrap:append("<,>,h,l,[,]")
+
+-- enable persistent undo and swap
+vim.opt.undofile = true -- Enable persistent undo
+vim.opt.swapfile = true -- Keep swap files for crash recovery
+vim.opt.backup = false -- Disable backups (redundant with undofile)
+
+-- Disable unused providers to eliminate health check warnings
+vim.g.loaded_perl_provider = 0      -- Disable Perl provider
+vim.g.loaded_ruby_provider = 0      -- Disable Ruby provider  
+vim.g.loaded_node_provider = 0      -- Disable Node.js provider
+vim.g.loaded_python3_provider = 0   -- Disable Python provider
+
+-- ===========================================
+-- Plugin Manager Setup
+-- ===========================================
+-- Bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+    vim.fn.system(
+        {
+            "git",
+            "clone",
+            "--filter=blob:none",
+            "https://github.com/folke/lazy.nvim.git",
+            "--branch=stable", -- latest stable release
+            lazypath
+        }
+    )
+end
+vim.opt.rtp:prepend(lazypath)
+
+-- Plugin specification
+require("lazy").setup(
+    {
+        -- OSC52 clipboard support for all environments
+        {
+            "ojroques/nvim-osc52",
+            config = function()
+                require("osc52").setup {
+                    max_length = 0, -- Maximum length of selection (0 for no limit)
+                    silent = true, -- Disable message when copied
+                    trim = false -- Trim surrounding whitespaces before copy
+                }
+
+                -- Add yank hooks - use OSC52 for all environments for consistency
+                vim.api.nvim_create_autocmd(
+                    "TextYankPost",
+                    {
+                        callback = function()
+                            if
+                                vim.v.event.operator == "y" and
+                                    (vim.v.event.regname == "" or vim.v.event.regname == "+" or
+                                        vim.v.event.regname == "*")
+                             then
+                                require("osc52").copy_register(vim.v.event.regname)
+                            end
+                        end
+                    }
+                )
+            end
+        },
+        -- Comment plugin
+        {
+            "numToStr/Comment.nvim",
+            config = function()
+                require("Comment").setup()
+            end
+        },
+        -- vim-tmux-navigator
+        {
+            "christoomey/vim-tmux-navigator",
+            cmd = {
+                "TmuxNavigateLeft",
+                "TmuxNavigateDown",
+                "TmuxNavigateUp",
+                "TmuxNavigateRight",
+                "TmuxNavigatePrevious",
+                "TmuxNavigatorProcessList"
+            },
+            keys = {
+                {"<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>"},
+                {"<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>"},
+                {"<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>"},
+                {"<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>"},
+                {"<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>"}
+            }
+        },
+        -- Treesitter for better syntax highlighting
+        {
+            "nvim-treesitter/nvim-treesitter",
+            build = ":TSUpdate",
+            config = function()
+                require("nvim-treesitter.configs").setup(
+                    {
+                        -- Only install parsers you need
+                        ensure_installed = {
+                            "lua",
+                            "vim",
+                            "vimdoc",
+                            "c",
+                            "cpp",
+                            "python",
+                            "perl",
+                            "json",
+                            "yaml",
+                            "toml",
+                            "bash",
+                            "markdown",
+                            "markdown_inline",
+                            "verilog"
+                        },
+                        -- Install parsers synchronously (only applied to `ensure_installed`)
+                        sync_install = false,
+                        -- Automatically install missing parsers when entering buffer
+                        auto_install = false, -- Keep this false to avoid surprises
+                        highlight = {
+                            enable = true,
+                            -- IMPORTANT: Don't override existing syntax highlighting completely
+                            additional_vim_regex_highlighting = false
+                        },
+                        indent = {
+                            enable = true,
+                            disable = {} -- Add languages here if they cause issues, e.g. {"verilog", "systemverilog"}
+                        },
+                        -- DISABLED: Keep this minimal for now
+                        incremental_selection = {
+                            enable = false
+                        }
+                    }
+                )
+            end
+        },
+        -- Telescope fuzzy finder
+        {
+            "nvim-telescope/telescope.nvim",
+            tag = "0.1.8", -- Pin to stable version
+            dependencies = {
+                "nvim-lua/plenary.nvim",
+                "nvim-tree/nvim-web-devicons",
+                {
+                    "nvim-telescope/telescope-fzf-native.nvim",
+                    build = "make",
+                    cond = function()
+                        return vim.fn.executable("make") == 1
+                    end
+                }
+            },
+            config = function()
+                local telescope = require("telescope")
+                local actions = require("telescope.actions")
+
+                telescope.setup(
+                    {
+                        defaults = {
+                            mappings = {
+                                i = {
+                                    ["<C-j>"] = actions.move_selection_next,
+                                    ["<C-k>"] = actions.move_selection_previous,
+                                    ["<Esc>"] = actions.close
+                                }
+                            },
+                            layout_config = {
+                                horizontal = {
+                                    prompt_position = "top",
+                                    preview_width = 0.6
+                                }
+                            },
+                            sorting_strategy = "ascending",
+                            -- Let fd and rg use their smart defaults, just add a few verilog-specific ignores
+                            file_ignore_patterns = {
+                                "*.v~", -- Verilog backup files
+                                "xcelium.d/" -- Cadence simulation directory
+                            },
+                            preview = {
+                                treesitter = true
+                            }
+                        },
+                        pickers = {
+                            find_files = {
+                                find_command = {"fd", "--type", "f", "--hidden", "--follow"}
+                            },
+                            buffers = {
+                                sort_lastused = true,
+                                theme = "dropdown",
+                                previewer = false
+                            }
+                        },
+                        extensions = {
+                            fzf = {
+                                fuzzy = true,
+                                override_generic_sorter = true,
+                                override_file_sorter = true,
+                                case_mode = "smart_case"
+                            }
+                        }
+                    }
+                )
+
+                pcall(telescope.load_extension, "fzf")
+            end,
+            keys = {
+                -- File finding
+                {"<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files"},
+                {"<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live grep"},
+                {"<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Find buffers"},
+                {"<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help tags"},
+                {"<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent files"},
+                {"<leader>fc", "<cmd>Telescope commands<cr>", desc = "Commands"},
+                {"<leader>fk", "<cmd>Telescope keymaps<cr>", desc = "Keymaps"},
+                -- Quick access
+                {"<C-p>", "<cmd>Telescope find_files<cr>", desc = "Find files"},
+                {"<C-f>", "<cmd>Telescope live_grep<cr>", desc = "Live grep"}
+            }
+        },
+        -- Gruvbox theme
+        {
+            "ellisonleao/gruvbox.nvim",
+            priority = 1000,
+            config = function()
+                require("gruvbox").setup()
+            end
+        },
+        -- Catppuccin theme
+        {
+            "catppuccin/nvim",
+            name = "catppuccin",
+            priority = 1000,
+            config = function()
+                require("catppuccin").setup(
+                    {
+                        flavour = "macchiato" -- Options: latte, frappe, macchiato, mocha
+                    }
+                )
+            end
+        },
+        -- Lualine status line
+        {
+            "nvim-lualine/lualine.nvim",
+            dependencies = {"nvim-tree/nvim-web-devicons"},
+            config = function()
+                vim.opt.laststatus = 0
+                require("lualine").setup {
+                    options = {
+                        globalstatus = true,
+                        component_separators = "\u{e621}",
+                        section_separators = "" -- No global separators
+                    },
+                    sections = {}, -- Empty sections to disable bottom
+                    inactive_sections = {},
+                    winbar = {
+                        lualine_a = {{"mode", separator = {left = "\u{e0b6}"}, right_padding = 2}},
+                        lualine_b = {"branch", "diff", "diagnostics"},
+                        lualine_c = {{"filename", path = 1}}, -- path = 1 shows relative path
+                        lualine_x = {"encoding", "fileformat", "filetype"},
+                        lualine_y = {"progress"},
+                        lualine_z = {{"location", separator = {right = "\u{e0b4}"}, left_padding = 2}}
+                    },
+                    inactive_winbar = {
+                        lualine_c = {{"filename", path = 1}} -- path = 1 shows relative path
+                    }
+                }
+            end
+        },
+        -- Completion system
+        {
+            "hrsh7th/nvim-cmp",
+            event = "InsertEnter",
+            dependencies = {
+                "hrsh7th/cmp-buffer", -- Buffer completions
+                "hrsh7th/cmp-path", -- Path completions
+                "saadparwaiz1/cmp_luasnip", -- Snippet completions
+                "L3MON4D3/LuaSnip" -- Snippet engine
+            },
+            config = function()
+                local cmp = require("cmp")
+                local luasnip = require("luasnip")
+
+                -- Set up nvim-cmp
+                cmp.setup(
+                    {
+                        snippet = {
+                            expand = function(args)
+                                luasnip.lsp_expand(args.body)
+                            end
+                        },
+                        mapping = cmp.mapping.preset.insert(
+                            {
+                                ["<C-k>"] = cmp.mapping.select_prev_item(),
+                                ["<C-j>"] = cmp.mapping.select_next_item(),
+                                ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+                                ["<C-f>"] = cmp.mapping.scroll_docs(4),
+                                ["<C-Space>"] = cmp.mapping.complete(),
+                                ["<C-e>"] = cmp.mapping.abort(),
+                                ["<CR>"] = cmp.mapping.confirm({select = true}), -- Accept currently selected item
+                                ["<Tab>"] = cmp.mapping(
+                                    function(fallback)
+                                        if cmp.visible() then
+                                            cmp.select_next_item()
+                                        elseif luasnip.expandable() then
+                                            luasnip.expand()
+                                        else
+                                            fallback()
+                                        end
+                                    end,
+                                    {"i", "s"}
+                                ),
+                                ["<S-Tab>"] = cmp.mapping(
+                                    function(fallback)
+                                        if cmp.visible() then
+                                            cmp.select_prev_item()
+                                        else
+                                            fallback()
+                                        end
+                                    end,
+                                    {"i", "s"}
+                                )
+                            }
+                        ),
+                        sources = cmp.config.sources(
+                            {
+                                {name = "buffer"},
+                                {name = "path"}
+                                -- { name = "luasnip" },
+                            }
+                        ),
+                        formatting = {
+                            format = function(entry, vim_item)
+                                -- Kind icons
+                                vim_item.kind = string.format("%s %s", vim_item.kind, vim_item.kind)
+                                -- Source
+                                vim_item.menu =
+                                    ({
+                                    buffer = "[Buffer]",
+                                    path = "[Path]",
+                                    luasnip = "[Snippet]"
+                                })[entry.source.name]
+                                return vim_item
+                            end
+                        },
+                        window = {
+                            documentation = cmp.config.window.bordered(),
+                            completion = cmp.config.window.bordered()
+                        },
+                        experimental = {
+                            ghost_text = true
+                        }
+                    }
+                )
+
+                -- Set configuration for specific filetype
+                cmp.setup.filetype(
+                    "markdown",
+                    {
+                        sources = cmp.config.sources(
+                            {
+                                {name = "buffer"}
+                            }
+                        )
+                    }
+                )
+
+                -- Set up automatic completion popup
+                local autopairs_ok, cmp_autopairs = pcall(require, "nvim-autopairs.completion.cmp")
+                if autopairs_ok then
+                    cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+                end
+            end
+        }
+    },
+    {
+        -- Lazy.nvim options
+        rocks = {
+            enabled = false,  -- Disable luarocks support completely
+        },
+    }
+)
+
+-- ===========================================
+-- colorscheme
+-- ===========================================
+
+local theme = os.getenv("MY_CURRENT_THEME")
+if theme == "light" then
+    vim.o.background = "light"
+    vim.cmd.colorscheme "gruvbox"
+else
+    vim.o.background = "dark"
+    vim.cmd.colorscheme "catppuccin"
+end
+
+-- ===========================================
+-- Key Mappings
+-- ===========================================
+
+-- Line Movement (Alt+Up/Down to move lines)
+-- Normal mode
+vim.keymap.set("n", "<M-Up>", ":m .-2<CR>==", {silent = true})
+vim.keymap.set("n", "<M-Down>", ":m .+1<CR>==", {silent = true})
+-- Also map the escape sequences for terminal compatibility
+vim.keymap.set("n", "<Esc>[1;9A", ":m .-2<CR>==", {silent = true})
+vim.keymap.set("n", "<Esc>[1;9B", ":m .+1<CR>==", {silent = true})
+
+-- Visual mode
+vim.keymap.set("v", "<M-Up>", ":m '<-2<CR>gv=gv", {silent = true})
+vim.keymap.set("v", "<M-Down>", ":m '>+1<CR>gv=gv", {silent = true})
+-- Also map the escape sequences for terminal compatibility
+vim.keymap.set("v", "<Esc>[1;9A", ":m '<-2<CR>gv=gv", {silent = true})
+vim.keymap.set("v", "<Esc>[1;9B", ":m '>+1<CR>gv=gv", {silent = true})
+
+-- Insert mode
+vim.keymap.set("i", "<M-Up>", "<C-o>:m .-2<CR>", {silent = true})
+vim.keymap.set("i", "<M-Down>", "<C-o>:m .+1<CR>", {silent = true})
+-- Also map the escape sequences for terminal compatibility
+vim.keymap.set("i", "<Esc>[1;9A", "<C-o>:m .-2<CR>", {silent = true})
+vim.keymap.set("i", "<Esc>[1;9B", "<C-o>:m .+1<CR>", {silent = true})
+
+-- Comment keybindings
+-- Normal mode
+vim.keymap.set(
+    "n",
+    "<Leader>/",
+    function()
+        require("Comment.api").toggle.linewise.current()
+    end
+)
+vim.keymap.set(
+    "n",
+    "<C-/>",
+    function()
+        require("Comment.api").toggle.linewise.current()
+    end
+)
+
+-- Visual mode - multiline commenting
+vim.keymap.set("x", "<Leader>/", "<Plug>(comment_toggle_linewise_visual)", {desc = "Toggle comment on selected lines"})
+vim.keymap.set("x", "<C-/>", "<Plug>(comment_toggle_linewise_visual)", {desc = "Toggle comment on selected lines"})
+
+-- Clear search highlight with Enter
+vim.keymap.set("n", "<CR>", ":nohl<CR><CR>", {silent = true})
+
+-- Toggle line numbers with <Leader>n
+vim.keymap.set("n", "<Leader>n", ":set invnumber invrelativenumber<CR>", {silent = true})
+
+-- ===========================================
+-- Additional Neovim Improvements
+-- ===========================================
+
+-- Filetype associations
+vim.api.nvim_create_autocmd({"BufNewFile", "BufRead"}, {
+        pattern = {"*.v", "*.vh", "*.sv", "*.svp"},
+        command = "set filetype=systemverilog"
+})
+
+-- propagate diff filetype
+local function handle_diff_propagation()
+    if vim.wo.diff and vim.fn.winnr('$') == 2 then
+        for win = 1, 2 do
+            local filetype = vim.fn.getwinvar(win, '&filetype')
+            if filetype == '' then
+                local other_win = win == 1 and 2 or 1
+                local other_filetype = vim.fn.getwinvar(other_win, '&filetype')
+                vim.cmd('set filetype=' .. other_filetype)
+            end
+        end
+    end
+end
+vim.api.nvim_create_autocmd({"VimEnter"}, {
+    callback = handle_diff_propagation
+})
+
+-- DiffOrig function
+vim.api.nvim_create_user_command(
+    "DiffOrig",
+    function()
+        -- Save the current buffer number for reference
+        local current_buf = vim.api.nvim_get_current_buf()
+
+        -- Check if the file exists on disk
+        local filepath = vim.api.nvim_buf_get_name(current_buf)
+        if filepath == "" or vim.fn.filereadable(filepath) == 0 then
+            vim.notify("Current buffer has not been saved to disk yet", vim.log.levels.WARN)
+            return
+        end
+
+        -- Mark current window for diff
+        vim.cmd("diffthis")
+        vim.cmd("vnew")
+        -- Read the file from disk and delete the empty first line
+        vim.cmd("r ++edit #")
+        vim.cmd("1delete _")
+        -- Make this buffer readonly to prevent accidental changes
+        vim.cmd("setlocal readonly buftype=nofile bufhidden=wipe noswapfile")
+        vim.cmd("setlocal nomodifiable")
+        -- Name the buffer clearly
+        vim.api.nvim_buf_set_name(0, "Original: " .. vim.fn.fnamemodify(filepath, ":t"))
+        -- Mark for diff and return to original window
+        vim.cmd("diffthis")
+        vim.cmd("wincmd p")
+    end,
+    {}
+)
+
+-- Command-line Abbreviations (for common typos)
+vim.cmd(
+    [[
+  cnoreabbrev W w
+  cnoreabbrev Q q
+  cnoreabbrev Wq wq
+  cnoreabbrev Qa qa
+  cnoreabbrev Wqa wqa
+  cnoreabbrev Set set
+]]
+)
