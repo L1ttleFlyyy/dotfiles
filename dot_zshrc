@@ -9,8 +9,7 @@ fi
 # =============================================================
 #                       homebrew completion
 # =============================================================
-BREW_CMP_DIR="$(brew --prefix)/share/zsh/site-functions"
-FPATH="${BREW_CMP_DIR}:${FPATH}"
+FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 
 # =============================================================
 #                       MACOS tweak
@@ -19,18 +18,12 @@ if [[ "$(uname)" == "Darwin" ]]; then
     export ZSH_IN_MACOS=true
     export HOMEBREW_CASK_OPTS="--appdir=/Applications --fontdir=/Library/Fonts"
 
-    # LS_COLORS
-    command -v gls &> /dev/null && alias ls="gls --color"
-
     # due to multi-user access, compinit refuses to load homebrew directory
     # needs to force compinit with -u
-    if [[ "$(stat -f '%Su' ${BREW_CMP_DIR})" != "${USER}" ]]; then
-        FPATH="${BREW_CMP_DIR}:${FPATH}"
+    if [[ "$(stat -f '%Su' $(brew --prefix))" != "${USER}" ]]; then
         ANTIGEN_COMPINIT_OPTS="-u"
     fi
 fi
-unset BREW_CMP_DIR
-
 
 # =============================================================
 #                   Zsh State Management
@@ -46,47 +39,18 @@ HISTSIZE=10000
 # ZSH_COMPDUMP="$HOME/.local/state/zsh/.zcompdump"
 
 # =============================================================
-#                       FZF Config
-# =============================================================
-
-# global ignnore file is $HOME/.config/fd/ignore
-export FZF_DEFAULT_COMMAND="fd --type file --follow --hidden"
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-export FZF_ALT_C_COMMAND="fd --type dir --follow --hidden"
-
-export MY_FZF_OPTS_NO_COLOR=" --height 60% --layout reverse --border --info=inline"
-# export FZF_CTRL_T_OPTS='--preview "bat --color=always {}"'
-export FZF_ALT_C_OPTS='--preview "tree -C {}"'
-
-# rg config
-export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
-
-# =============================================================
-#                       Color theme
-# =============================================================
-
-# apply-theme quick-cmd
-APPLY_THEME_BIN="$HOME/.config/colortheme/apply-theme.sh"
-source $APPLY_THEME_BIN && __apply_theme_for_rc;
-alias apply-theme="__apply_theme_all"
-unset APPLY_THEME_BIN
-
-# =============================================================
 #                      Antigen Plugins
 # =============================================================
 
 source $HOMEBREW_PREFIX/share/antigen/antigen.zsh
 # Load the oh-my-zsh's library.
 antigen use oh-my-zsh
-
-# Bundles from the default repo (robbyrussell's oh-my-zsh).
+# completions
 antigen bundle git
 antigen bundle ufw
-
-# Syntax highlighting bundle.
-# compinit needs to be before fzf-tab
 antigen bundle zsh-users/zsh-completions
 
+# compinit needs to be before fzf-tab
 zstyle ':fzf-tab:*' use-fzf-default-opts yes
 antigen bundle Aloxaf/fzf-tab
 
@@ -103,6 +67,34 @@ antigen apply
 
 # have to put here to make the keybindings work with fzf-tab
 source <(fzf --zsh) 
+
+# =============================================================
+#                       FZF Config (before color theme)
+# =============================================================
+
+# global ignnore file is $HOME/.config/fd/ignore
+export FZF_DEFAULT_COMMAND="fd --type file --follow --hidden"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND="fd --type dir --follow --hidden"
+
+export MY_FZF_OPTS_NO_COLOR=" --height 60% --layout reverse --info=inline"
+# export FZF_CTRL_T_OPTS='--preview "bat --color=always {}"'
+export FZF_ALT_C_OPTS='--preview "tree -C {}"'
+
+# rg config
+export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
+
+# =============================================================
+#                       Color theme
+# =============================================================
+
+# apply-theme quick-cmd
+source $HOME/.config/colortheme/apply-theme.sh && __apply_theme_for_rc;
+alias apply-theme="__apply_theme_all"
+# macos LS_COLORS
+if [[ $ZSH_IN_MACOS ]] then
+    command gls &> /dev/null && alias ls="gls --color"
+fi
 
 # =============================================================
 #                      User Aliases
