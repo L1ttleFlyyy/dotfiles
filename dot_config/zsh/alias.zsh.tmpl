@@ -1,0 +1,18 @@
+alias clear='echo -ne "\033c"'
+alias c='clear'
+alias ll='ls -l'
+alias la='ls -a'
+alias du='du -h -d1'
+
+alias vim='nvim'
+alias vimdiff='nvim -d'
+alias sys='systemctl'
+alias che=chezmoi
+
+{{ if eq .chezmoi.os "darwin" }}
+# macos LS_COLORS
+command gls &> /dev/null && \
+    alias ls="gls --color"
+[[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]] \
+    && alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+{{ end }}

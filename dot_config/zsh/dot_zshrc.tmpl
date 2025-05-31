@@ -99,10 +99,6 @@ export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
 # apply-theme quick-cmd
 source $HOME/.config/colortheme/apply-theme.sh && __apply_theme_for_rc;
 alias apply-theme="__apply_theme_all"
-{{ if eq .chezmoi.os "darwin" }}
-# macos LS_COLORS
-command gls &> /dev/null && alias ls="gls --color"
-{{ end }}
 
 # =============================================================
 #                      User Aliases
