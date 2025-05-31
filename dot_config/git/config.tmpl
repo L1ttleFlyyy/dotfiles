@@ -24,3 +24,11 @@
 	helper = 
 	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
 {{- end }}
+{{- if (and (eq .chezmoi.username "l1ttleflyyy") (eq .chezmoi.os "darwin")) }}
+[credential "https://github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/opt/homebrew/bin/gh auth git-credential
+{{- end }}
