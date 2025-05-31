@@ -10,17 +10,16 @@ fi
 # =============================================================
 BREW_CMP_DIR="$(brew --prefix)/share/zsh/site-functions"
 FPATH="${BREW_CMP_DIR}:${FPATH}"
+{{ if eq .chezmoi.os "darwin" }}
 
 # =============================================================
 #                       MACOS tweak
 # =============================================================
-if [[ "$(uname)" == "Darwin" ]]; then
-    export ZSH_IN_MACOS=true
-    export HOMEBREW_CASK_OPTS="--appdir=/Applications --fontdir=/Library/Fonts"
-    if [[ "$(stat -f '%Su' ${BREW_CMP_DIR})" != "${USER}" ]]; then
-        ZSH_COMPINIT_OPTS="-u"
-    fi
+export HOMEBREW_CASK_OPTS="--appdir=/Applications --fontdir=/Library/Fonts"
+if [[ "$(stat -f '%Su' ${BREW_CMP_DIR})" != "${USER}" ]]; then
+    ZSH_COMPINIT_OPTS="-u"
 fi
+{{ end }}
 unset BREW_CMP_DIR
 
 # =============================================================
@@ -32,9 +31,9 @@ mkdir -p $HOME/.local/state/less
 mkdir -p $HOME/.local/state/zsh
 
 export LESSHISTFILE="$HOME/.local/state/less/history"
-HISTFILE="$HOME/.local/state/zsh/history"
-SAVEHIST=10000
-HISTSIZE=10000
+export HISTFILE="$HOME/.local/state/zsh/history"
+export SAVEHIST=10000
+export HISTSIZE=10000
 
 # =============================================================
 #                      Zinit Setup
@@ -100,10 +99,10 @@ export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
 # apply-theme quick-cmd
 source $HOME/.config/colortheme/apply-theme.sh && __apply_theme_for_rc;
 alias apply-theme="__apply_theme_all"
+{{ if eq .chezmoi.os "darwin" }}
 # macos LS_COLORS
-if [[ $ZSH_IN_MACOS ]] then
-    command gls &> /dev/null && alias ls="gls --color"
-fi
+command gls &> /dev/null && alias ls="gls --color"
+{{ end }}
 
 # =============================================================
 #                      User Aliases
