@@ -55,7 +55,7 @@ __apply_theme_tmux() {
     if tmux list-sessions &> /dev/null; then
         tmux set-environment MY_CURRENT_THEME "$MY_CURRENT_THEME"
         tmux show-options -g | grep -E -o "^@\w+\s" | grep -E "@(_ctp|batt_|cpu_|ram_|thm_|catppuccin_)" | sed "s/^/set -Ugq /" | tr "\n" ";" | tmux source-file -
-        tmux source-file "$HOME/.tmux.conf"
+        tmux source-file "$HOME/.config/tmux/tmux.conf"
         # broadcast to tmux pane
         command -v tmux-broadcast &> /dev/null && tmux-broadcast "export MY_CURRENT_THEME=${MY_CURRENT_THEME} && __apply_theme_for_rc";
     fi
