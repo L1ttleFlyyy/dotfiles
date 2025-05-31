@@ -36,6 +36,22 @@ export SAVEHIST=10000
 export HISTSIZE=10000
 
 # =============================================================
+#                       FZF Config
+# =============================================================
+
+# global ignnore file is $HOME/.config/fd/ignore
+export FZF_DEFAULT_COMMAND="fd --type file --follow --hidden"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND="fd --type dir --follow --hidden"
+
+export FZF_DEFAULT_OPTS="--tmux 70% --layout reverse --info=inline"
+# export FZF_CTRL_T_OPTS='--preview "bat --color=always {}"'
+export FZF_ALT_C_OPTS='--preview "tree -C -a -d -L 2 {}"'
+
+# rg config
+export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
+
+# =============================================================
 #                      Zinit Setup
 # =============================================================
 # Configure zinit paths
@@ -55,8 +71,6 @@ zinit snippet OMZL::key-bindings.zsh
 # Completions - use blockf to prevent fpath pollution
 zinit ice blockf; zinit light zsh-users/zsh-completions
 
-# fzf-tab setup
-zstyle ':fzf-tab:*' use-fzf-default-opts yes
 zinit light Aloxaf/fzf-tab
 
 # These need to be after fzf-tab
@@ -73,24 +87,21 @@ zinit cdreplay -q  # replay compdefs
 
 unset ZSH_COMPINIT_OPTS
 
-# =============================================================
-#                       FZF Config (before color theme)
-# =============================================================
-
-# global ignnore file is $HOME/.config/fd/ignore
-export FZF_DEFAULT_COMMAND="fd --type file --follow --hidden"
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-export FZF_ALT_C_COMMAND="fd --type dir --follow --hidden"
-
-export MY_FZF_OPTS_NO_COLOR=" --height 60% --layout reverse --info=inline"
-# export FZF_CTRL_T_OPTS='--preview "bat --color=always {}"'
-export FZF_ALT_C_OPTS='--preview "tree -C {}"'
-
 # FZF keybindings: must be after fzf-tab
 source <(fzf --zsh) 
 
-# rg config
-export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
+# =============================================================
+#                       fzf-tab config
+# =============================================================
+
+# fzf-tab setup
+setopt globdots
+zstyle ':fzf-tab:complete:*:directories'    fzf-preview                       'tree -C -a -d -L 2 $realpath'
+zstyle ':fzf-tab:complete:*:*files'         fzf-preview '[[ -d $realpath ]] && tree -C -a -d -L 2 $realpath'
+zstyle ':fzf-tab:complete:*:argument-rest'  fzf-preview '[[ -d $realpath ]] && tree -C -a -d -L 2 $realpath'
+
+zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
+zstyle ':fzf-tab:*' popup-min-size 120 10
 
 # =============================================================
 #                       Color theme

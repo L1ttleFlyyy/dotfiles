@@ -71,24 +71,11 @@ __apply_theme_ls_colors() {
     fi
 }
 
-__apply_theme_fzf() {
-    if command -v fzf &> /dev/null; then
-        MY_CURRENT_THEME_FZF_GRUVBOX=" --color=bg+:#F2E5BC,bg:#FBF1C7,spinner:#D65D0E,hl:#B57614 --color=fg:#3C3836,header:#B57614,info:#8F3F71,pointer:#D65D0E --color=marker:#076678,fg+:#282828,prompt:#8F3F71,hl+:#B57614 --color=selected-bg:#EBDBB2 --color=border:#D5C4A1,label:#3C3836"
-        MY_CURRENT_THEME_FZF_CATPPUCCIN="--color=bg+:#363A4F,bg:#24273A,spinner:#F4DBD6,hl:#ED8796 --color=fg:#CAD3F5,header:#ED8796,info:#C6A0F6,pointer:#F4DBD6 --color=marker:#B7BDF8,fg+:#CAD3F5,prompt:#C6A0F6,hl+:#ED8796 --color=selected-bg:#494D64 --color=border:#363A4F,label:#CAD3F5"
-        if [[ "$MY_CURRENT_THEME" == "light" ]]; then
-            export FZF_DEFAULT_OPTS="$MY_FZF_OPTS_NO_COLOR $MY_CURRENT_THEME_FZF_GRUVBOX"
-        else
-            export FZF_DEFAULT_OPTS="$MY_FZF_OPTS_NO_COLOR $MY_CURRENT_THEME_FZF_CATPPUCCIN"
-        fi
-    fi
-}
-
 __apply_theme_for_rc() {
     __apply_theme_init
     __apply_theme_read_theme
     export MY_CURRENT_THEME
     __apply_theme_ls_colors
-    __apply_theme_fzf
     __apply_theme_cleanup
 }
 
@@ -98,7 +85,6 @@ __apply_theme_all() {
     export MY_CURRENT_THEME
     __apply_theme_save_theme
     __apply_theme_ls_colors
-    __apply_theme_fzf
     __apply_theme_tmux
     __apply_theme_cleanup
     echo "Theme set to ${MY_CURRENT_THEME}"
