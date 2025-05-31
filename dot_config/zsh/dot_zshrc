@@ -8,7 +8,8 @@ fi
 # =============================================================
 #                       homebrew completion
 # =============================================================
-FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+BREW_CMP_DIR="$(brew --prefix)/share/zsh/site-functions"
+FPATH="${BREW_CMP_DIR}:${FPATH}"
 
 # =============================================================
 #                       MACOS tweak
@@ -16,7 +17,11 @@ FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 if [[ "$(uname)" == "Darwin" ]]; then
     export ZSH_IN_MACOS=true
     export HOMEBREW_CASK_OPTS="--appdir=/Applications --fontdir=/Library/Fonts"
+    if [[ "$(stat -f '%Su' ${BREW_CMP_DIR})" != "${USER}" ]]; then
+        ZSH_COMPINIT_OPTS="-u"
+    fi
 fi
+unset BREW_CMP_DIR
 
 # =============================================================
 #                   Zsh State Management
@@ -26,7 +31,7 @@ export SHELL_SESSIONS_DISABLE=1
 mkdir -p $HOME/.local/state/less
 mkdir -p $HOME/.local/state/zsh
 
-LESSHISTFILE="$HOME/.local/state/less/history"
+export LESSHISTFILE="$HOME/.local/state/less/history"
 HISTFILE="$HOME/.local/state/zsh/history"
 SAVEHIST=10000
 HISTSIZE=10000
@@ -63,8 +68,10 @@ zinit ice depth=1; zinit light romkatv/powerlevel10k
 
 # Initialize completions
 autoload -Uz compinit
-compinit
+compinit $ZSH_COMPINIT_OPTS
 zinit cdreplay -q  # replay compdefs
+
+unset ZSH_COMPINIT_OPTS
 
 # =============================================================
 #                       FZF Config (before color theme)
