@@ -51,6 +51,7 @@ source "${ZINIT_HOME}/zinit.zsh"
 
 # Load OMZ Git library (for theme compatibility)
 zinit snippet OMZL::git.zsh
+zinit snippet OMZL::key-bindings.zsh
 
 # Completions - use blockf to prevent fpath pollution
 zinit ice blockf; zinit light zsh-users/zsh-completions
