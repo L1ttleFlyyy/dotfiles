@@ -44,7 +44,7 @@ export FZF_DEFAULT_COMMAND="fd --type file --follow --hidden"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND="fd --type dir --follow --hidden"
 
-export FZF_DEFAULT_OPTS="--tmux 70% --layout reverse --info=inline"
+export FZF_DEFAULT_OPTS='--tmux 70% --layout reverse --info=inline --pointer=">"'
 # export FZF_CTRL_T_OPTS='--preview "bat --color=always {}"'
 export FZF_ALT_C_OPTS='--preview "tree -C -a -d -L 2 {}"'
 
@@ -96,10 +96,12 @@ source <(fzf --zsh)
 
 # fzf-tab setup
 setopt globdots
+zstyle ':fzf-tab:complete:cd:*'             fzf-preview                       'tree -C -a -d -L 2 $realpath'
 zstyle ':fzf-tab:complete:*:directories'    fzf-preview                       'tree -C -a -d -L 2 $realpath'
 zstyle ':fzf-tab:complete:*:*files'         fzf-preview '[[ -d $realpath ]] && tree -C -a -d -L 2 $realpath'
 zstyle ':fzf-tab:complete:*:argument-rest'  fzf-preview '[[ -d $realpath ]] && tree -C -a -d -L 2 $realpath'
 
+zstyle ':fzf-tab:*' fzf-flags '--pointer=>'
 zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 zstyle ':fzf-tab:*' popup-min-size 120 10
 
