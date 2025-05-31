@@ -173,86 +173,34 @@ require("lazy").setup(
                 )
             end
         },
-        -- Telescope fuzzy finder
         {
-            "nvim-telescope/telescope.nvim",
-            tag = "0.1.8", -- Pin to stable version
-            dependencies = {
-                "nvim-lua/plenary.nvim",
-                "nvim-tree/nvim-web-devicons",
-                {
-                    "nvim-telescope/telescope-fzf-native.nvim",
-                    build = "make",
-                    cond = function()
-                        return vim.fn.executable("make") == 1
-                    end
-                }
-            },
+            "ibhagwan/fzf-lua",
+            dependencies = { "nvim-tree/nvim-web-devicons" },
             config = function()
-                local telescope = require("telescope")
-                local actions = require("telescope.actions")
-
-                telescope.setup(
-                    {
-                        defaults = {
-                            mappings = {
-                                i = {
-                                    ["<C-j>"] = actions.move_selection_next,
-                                    ["<C-k>"] = actions.move_selection_previous,
-                                    ["<Esc>"] = actions.close
-                                }
-                            },
-                            layout_config = {
-                                horizontal = {
-                                    prompt_position = "top",
-                                    preview_width = 0.6
-                                }
-                            },
-                            sorting_strategy = "ascending",
-                            -- Let fd and rg use their smart defaults, just add a few verilog-specific ignores
-                            file_ignore_patterns = {
-                                "*.v~", -- Verilog backup files
-                                "xcelium.d/" -- Cadence simulation directory
-                            },
-                            preview = {
-                                treesitter = true
-                            }
-                        },
-                        pickers = {
-                            find_files = {
-                                find_command = {"fd", "--type", "f", "--hidden", "--follow"}
-                            },
-                            buffers = {
-                                sort_lastused = true,
-                                theme = "dropdown",
-                                previewer = false
-                            }
-                        },
-                        extensions = {
-                            fzf = {
-                                fuzzy = true,
-                                override_generic_sorter = true,
-                                override_file_sorter = true,
-                                case_mode = "smart_case"
-                            }
-                        }
+                require("fzf-lua").setup({
+                    files = {
+                        -- cmd = "fd --type f --follow --hidden",
+                    },
+                    grep = {
+                        -- cmd = "rg --column --line-number --no-heading --color=always --smart-case",
                     }
-                )
-
-                pcall(telescope.load_extension, "fzf")
+                })
             end,
             keys = {
-                -- File finding
-                {"<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Find files"},
-                {"<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live grep"},
-                {"<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Find buffers"},
-                {"<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help tags"},
-                {"<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent files"},
-                {"<leader>fc", "<cmd>Telescope commands<cr>", desc = "Commands"},
-                {"<leader>fk", "<cmd>Telescope keymaps<cr>", desc = "Keymaps"},
-                -- Quick access
-                {"<C-p>", "<cmd>Telescope find_files<cr>", desc = "Find files"},
-                {"<C-f>", "<cmd>Telescope live_grep<cr>", desc = "Live grep"}
+                -- Keep your existing keybindings
+                {"<leader>ff", "<cmd>FzfLua files<cr>", desc = "Find files"},
+                {"<leader>fg", "<cmd>FzfLua live_grep<cr>", desc = "Live grep"},
+                {"<leader>fb", "<cmd>FzfLua buffers<cr>", desc = "Find buffers"},
+                {"<leader>fh", "<cmd>FzfLua help_tags<cr>", desc = "Help tags"},
+                {"<leader>fr", "<cmd>FzfLua oldfiles<cr>", desc = "Recent files"},
+                {"<leader>fc", "<cmd>FzfLua commands<cr>", desc = "Commands"},
+                {"<leader>fk", "<cmd>FzfLua keymaps<cr>", desc = "Keymaps"},
+                {"<leader>fw", "<cmd>FzfLua grep_cword<cr>", desc = "Search word under cursor"},
+
+                -- Keep existing quick access
+                {"<C-p>", "<cmd>FzfLua files<cr>", desc = "Find files"},
+                {"<C-f>", "<cmd>FzfLua grep_cword<cr>", desc = "Search word under cursor"},
+                {"<C-S-p>", "<cmd>FzfLua commands<cr>", desc = "Command palette"},
             }
         },
         -- Gruvbox theme
