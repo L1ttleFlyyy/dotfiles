@@ -21,22 +21,27 @@ fi
 # =============================================================
 #                   Zsh State Management
 # =============================================================
-# Create the state directory if it doesn't exist
+# Interactive shell settings
+export SHELL_SESSIONS_DISABLE=1
+mkdir -p $HOME/.local/state/less
 mkdir -p $HOME/.local/state/zsh
 
-# Redirect state files to .local/state/zsh
-HISTFILE="$HOME/.local/state/zsh/.zsh_history"
+LESSHISTFILE="$HOME/.local/state/less/history"
+HISTFILE="$HOME/.local/state/zsh/history"
 SAVEHIST=10000
 HISTSIZE=10000
 
 # =============================================================
 #                      Zinit Setup
 # =============================================================
+# Configure zinit paths
+declare -A ZINIT
+ZINIT[ZCOMPDUMP_PATH]="$ZDOTDIR/.zcompdump"
 
 # Install zinit if not present
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
-[ ! -d $ZINIT_HOME ] && mkdir -p "$(dirname $ZINIT_HOME)"
-[ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+[[ ! -d $ZINIT_HOME ]] && mkdir -p "$(dirname $ZINIT_HOME)"
+[[ ! -d $ZINIT_HOME/.git ]] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 source "${ZINIT_HOME}/zinit.zsh"
 
 # Load OMZ Git library (for theme compatibility)
@@ -105,7 +110,7 @@ export SUDO_EDITOR=nvim
 export MANPAGER="nvim +Man!"
 
 # Source custom aliases
-source "$HOME/.local/share/aliases/alias.zsh"
+source "$ZDOTDIR/alias.zsh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+[[ ! -f $ZDOTDIR/p10k.zsh ]] || source $ZDOTDIR/p10k.zsh
