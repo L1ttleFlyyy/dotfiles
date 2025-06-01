@@ -1,10 +1,18 @@
 # .chezmoiignore
-{{- if eq .chezmoi.os "windows" }}
-*
-!AppData/
-!.winconf/
-{{- else }}
-AppData/
-.winconf/
-{{- end }}
 LICENSE
+
+{{- if eq .chezmoi.os "windows" }}
+.zshenv
+.ignore
+.local/
+.config/colortheme/
+.config/rg/
+.config/fd/
+.config/tmux/
+.config/zsh/
+{{- end }}
+
+{{- if ne .chezmoi.os "windows" }}
+.config/pwsh/
+.chezmoiscripts/
+{{- end }}

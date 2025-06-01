@@ -1,4 +1,4 @@
-# run_after_link-powershell-profile.ps1.tmpl
+# run_after_link-pwsh.ps1.tmpl
 
 # Failsafe: Ensure we're running in PowerShell 7+
 if ($PSVersionTable.PSVersion.Major -lt 7) {
@@ -7,7 +7,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     exit 1
 }
 
-$sourceProfile = [System.IO.Path]::GetFullPath("$Env:USERPROFILE\.winconf\pwsh\profile.ps1")
+$sourceProfile = [System.IO.Path]::GetFullPath("$Env:USERPROFILE\.config\pwsh\profile.ps1")
 $targetProfile = [System.IO.Path]::GetFullPath("$Env:USERPROFILE\Documents\PowerShell\profile.ps1")
 
 if (!(Test-Path $sourceProfile)) {
@@ -27,12 +27,12 @@ if (!(Test-Path $targetDir)) {
 }
 
 if ((Test-Path $targetProfile) -and ((Get-Item $targetProfile).LinkTarget -eq $sourceProfile)) {
-    Write-Host "Profile already exist: $targetProfile -> $sourceProfile"
+    Write-Host "pwsh config already linked: $targetProfile -> $sourceProfile"
     return
 } else {
     if (Test-Path $targetProfile) {
         Remove-Item $targetProfile -Force
     }
     New-Item -ItemType SymbolicLink -Path $targetProfile -Target $sourceProfile
-    Write-Host "PowerShell profile symlinked: $targetProfile -> $sourceProfile"
+    Write-Host "pwsh config created : $targetProfile -> $sourceProfile"
 }
