@@ -8,6 +8,8 @@ alias vim='nvim'
 alias vimdiff='nvim -d'
 alias sys='systemctl'
 alias che=chezmoi
+alias cz=chezmoi
+alias czcd="cd $(chezmoi source-path)"
 
 {{ if eq .chezmoi.os "darwin" }}
 # macos LS_COLORS
