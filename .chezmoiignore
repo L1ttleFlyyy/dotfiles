@@ -2,8 +2,8 @@
 {{- if eq .chezmoi.os "windows" }}
 *
 !AppData/
+!.config/pwsh/
 {{- else }}
 AppData/
-.chezmoiscripts/run_after_link-powershell-profile.ps1.tmpl
-{{- end }}
 .config/pwsh/
+{{- end }}
