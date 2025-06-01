@@ -34,13 +34,16 @@ Remove-Item Alias:ls
 Remove-Item Alias:clear
 function clear {Write-Output "$([char]27)[H$([char]27)[2J" }
 function c { clear }
-function ls { Get-ChildItem | Format-Wide }
-function ll { Get-ChildItem }
-function la { Get-ChildItem -Force }
-Set-Alias -Name vim -Value nvim
-Set-Alias -Name open -Value explorer
-function vimdiff { nvim -d $args }
+function ls { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0] | Format-Wide } else { Get-ChildItem -Path . | Format-Wide } }
+function ll { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0]               } else { Get-ChildItem -Path .               } }
+function la { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0] -Force        } else { Get-ChildItem -Path . -Force        } }
+
 Set-Alias -Name du -Value dust
+Set-Alias -Name open -Value explorer
+
+Set-Alias -Name vim -Value nvim
+function vimdiff { nvim -d $args }
+
 Set-Alias -Name cz -Value chezmoi
 function czcd { cd (chezmoi source-path) }
 
