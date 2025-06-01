@@ -2,8 +2,9 @@
 {{- if eq .chezmoi.os "windows" }}
 *
 !AppData/
-!.config/pwsh/
+!.winconf/
 {{- else }}
 AppData/
-.config/pwsh/
+.winconf/
 {{- end }}
+LICENSE
