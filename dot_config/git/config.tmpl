@@ -1,6 +1,21 @@
 [user]
 	name = l1ttleflyyy
 	email = l1ttleflyyy@users.noreply.github.com
+[core]
+	editor = nvim
+{{- if eq .chezmoi.os "windows" }}
+	autocrlf = input
+{{- else }}
+	autocrlf = false
+{{- end }}
+[init]
+	defaultBranch = main
+[push]
+	default = simple
+[pull]
+	rebase = true
+[fetch]
+	prune = true
 [diff]
 	tool = nvimdiff
 [difftool]
@@ -12,10 +27,8 @@
 	keepBackup = false
 [alias]
 	d = difftool
+	stsh = stash
 	stat = status
-[pull]
-	rebase = false
-
 {{- if eq .chezmoi.os "linux" }}
 [credential "https://github.com"]
 	helper = 
