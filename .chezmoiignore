@@ -1,8 +1,9 @@
+# .chezmoiignore
 {{- if eq .chezmoi.os "windows" }}
 *
 !AppData/
-!Documents/
 {{- else }}
 AppData/
-Documents/
+.chezmoiscripts/run_after_link-powershell-profile.ps1.tmpl
 {{- end }}
+.config/pwsh/
