@@ -14,5 +14,5 @@ LICENSE
 
 {{- if ne .chezmoi.os "windows" }}
 .config/pwsh/
-.chezmoiscripts/
+.chezmoiscripts/**
 {{- end }}
