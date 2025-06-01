@@ -7,8 +7,13 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     exit 1
 }
 
-$sourceProfile = [System.IO.Path]::GetFullPath("{{ .chezmoi.sourceDir }}\dot_config\pwsh\profile.ps1")
+$sourceProfile = [System.IO.Path]::GetFullPath("$Env:USERPROFILE\.config\pwsh\profile.ps1")
 $targetProfile = [System.IO.Path]::GetFullPath("$Env:USERPROFILE\Documents\PowerShell\profile.ps1")
+
+if (!(Test-Path $sourceProfile)) {
+    Write-Error "chezmoi didn't create $sourceProfile?"
+    exit 1
+}
 
 $targetDir = Split-Path $targetProfile
 if ($PROFILE.CurrentUserAllHosts) {
