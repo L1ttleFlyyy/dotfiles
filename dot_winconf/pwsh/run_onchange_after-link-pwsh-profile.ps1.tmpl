@@ -1,0 +1,38 @@
+# run_after_link-powershell-profile.ps1.tmpl
+
+# Failsafe: Ensure we're running in PowerShell 7+
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Error "This script requires PowerShell 7 or later. Current version: $($PSVersionTable.PSVersion)"
+    Write-Error "Configure chezmoi with: [interpreters.ps1] command = 'pwsh'"
+    exit 1
+}
+
+$sourceProfile = [System.IO.Path]::GetFullPath("$Env:USERPROFILE\.winconf\pwsh\profile.ps1")
+$targetProfile = [System.IO.Path]::GetFullPath("$Env:USERPROFILE\Documents\PowerShell\profile.ps1")
+
+if (!(Test-Path $sourceProfile)) {
+    Write-Error "chezmoi didn't create $sourceProfile?"
+    exit 1
+}
+
+$targetDir = Split-Path $targetProfile
+if ($PROFILE.CurrentUserAllHosts) {
+    $targetProfile = $PROFILE.CurrentUserAllHosts
+}
+
+# Ensure target directory exists
+$targetDir = Split-Path $targetProfile
+if (!(Test-Path $targetDir)) {
+    New-Item -ItemType Directory -Path $targetDir
+}
+
+if ((Test-Path $targetProfile) -and ((Get-Item $targetProfile).LinkTarget -eq $sourceProfile)) {
+    Write-Host "Profile already exist: $targetProfile -> $sourceProfile"
+    return
+} else {
+    if (Test-Path $targetProfile) {
+        Remove-Item $targetProfile -Force
+    }
+    New-Item -ItemType SymbolicLink -Path $targetProfile -Target $sourceProfile
+    Write-Host "PowerShell profile symlinked: $targetProfile -> $sourceProfile"
+}
