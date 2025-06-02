@@ -9,6 +9,7 @@ LICENSE
 .config/colortheme/
 .config/rg/
 .config/fd/
+.config/nvim/
 .config/tmux/
 .config/zsh/
 {{- end }}
@@ -16,4 +17,5 @@ LICENSE
 {{- if ne .chezmoi.os "windows" }}
 .config/pwsh/
 .chezmoiscripts/**
+Appdata/
 {{- end }}
