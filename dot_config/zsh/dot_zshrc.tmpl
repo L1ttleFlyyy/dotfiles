@@ -10,7 +10,7 @@ fi
 # =============================================================
 BREW_CMP_DIR="$(brew --prefix)/share/zsh/site-functions"
 FPATH="${BREW_CMP_DIR}:${FPATH}"
-{{ if eq .chezmoi.os "darwin" }}
+{{- if eq .chezmoi.os "darwin" }}
 
 # =============================================================
 #                       MACOS tweak
@@ -19,7 +19,7 @@ export HOMEBREW_CASK_OPTS="--appdir=/Applications --fontdir=/Library/Fonts"
 if [[ "$(stat -f '%Su' ${BREW_CMP_DIR})" != "${USER}" ]]; then
     ZSH_COMPINIT_OPTS="-u"
 fi
-{{ end }}
+{{- end }}
 unset BREW_CMP_DIR
 
 # =============================================================

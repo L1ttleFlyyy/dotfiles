@@ -17,5 +17,5 @@ LICENSE
 {{- if ne .chezmoi.os "windows" }}
 .config/pwsh/
 .chezmoiscripts/**
-Appdata/
+AppData/
 {{- end }}
