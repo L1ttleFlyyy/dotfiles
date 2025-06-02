@@ -4,7 +4,7 @@ Import-Module PSFzf
 
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
 Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
-$Env:FZF_DEFAULT_OPTS = '--height=80% --reverse --cycle --info=inline --pointer=">" --bind=ctrl-space:accept'
+$Env:FZF_DEFAULT_OPTS = '--reverse --cycle --info=inline --pointer=">" --bind=ctrl-space:accept'
 # $Env:FZF_CTRL_T_OPTS = '--preview "bat --color=always {}"'
 $Env:FZF_ALT_C_OPTS = '--preview "tree {}"'
 
@@ -23,12 +23,13 @@ if (Get-Command scoop 2> $null) {
   }
 }
 
+$DUSER = "D:\Users\$env:USERNAME\"
+$Env:EDITOR = "nvim"
 $Env:MY_CURRENT_THEME = "dark"
 if ( (Get-WindowsAppsTheme) -eq "light") { 
     $Env:MY_CURRENT_THEME = "light"
 }
 
-$D_USER = "D:\Users\$env:USERNAME\"
 
 Remove-Item Alias:ls
 Remove-Item Alias:clear
