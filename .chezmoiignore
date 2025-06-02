@@ -6,16 +6,12 @@ LICENSE
 .zshenv
 .ignore
 .local/
-.config/colortheme/
-.config/rg/
-.config/fd/
-.config/nvim/
-.config/tmux/
-.config/zsh/
+.config/*
+!.config/git
 {{- end }}
 
 {{- if ne .chezmoi.os "windows" }}
-.config/pwsh/
 .chezmoiscripts/**
 AppData/
+.winconf/
 {{- end }}
