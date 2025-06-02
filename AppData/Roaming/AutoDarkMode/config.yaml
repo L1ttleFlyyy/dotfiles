@@ -1,0 +1,124 @@
+AutoThemeSwitchingEnabled: true
+Governor: Default
+Autostart:
+  Validate: true
+WindowsThemeMode:
+  Enabled: false
+  DarkThemePath: C:\Windows\resources\Themes\spotlight.theme
+  LightThemePath: C:\Windows\resources\Themes\spotlight.theme
+  MonitorActiveTheme: false
+  ApplyFlags: []
+AppsSwitch:
+  Enabled: true
+  Component:
+    Mode: Switch
+SystemSwitch:
+  Enabled: true
+  Component:
+    Mode: Switch
+    TaskbarSwitchDelay: 1200
+    TaskbarColorOnAdaptive: false
+    TaskbarColorWhenNonAdaptive: Light
+    DWMPrevalenceSwitch: false
+    DWMPrevalenceEnableTheme: Light
+TouchKeyboardSwitch:
+  Enabled: false
+  Component: {}
+ColorizationSwitch:
+  Enabled: true
+  Component:
+    LightHex: '#FF0078D5'
+    DarkHex: '#FF0078D5'
+    LightAutoColorization: true
+    DarkAutoColorization: true
+ColorFilterSwitch:
+  Enabled: false
+  Component: {}
+OfficeSwitch:
+  Enabled: false
+  Component:
+    Mode: Switch
+    LightTheme: 0
+    DarkTheme: 4
+CursorSwitch:
+  Enabled: true
+  Component:
+    CursorsLight: Windows Black
+    CursorsDark: Windows Inverted
+Sunrise: 2025-05-16T07:00:00.0000000
+Sunset: 2025-05-16T20:00:00.0000000
+Location:
+  PollingCooldownTimeSpan: 1.00:00:00
+  Enabled: true
+  UseGeolocatorService: false
+  SunsetOffsetMin: 0
+  SunriseOffsetMin: 0
+  CustomLat: 34.052235000000003
+  CustomLon: -118.243683
+Tunable:
+  BatterySliderDefaultValue: 25
+  DisableEnergySaverOnThemeSwitch: false
+  UseLogonTask: false
+  Debug: false
+  Trace: false
+  DebugTimerMessage: false
+  ShowTrayIcon: true
+  AlwaysFullDwmRefresh: true
+  UICulture: en
+GPUMonitoring:
+  Enabled: false
+  Threshold: 30
+  Samples: 1
+ProcessBlockList:
+  ProcessNames: []
+  Enabled: false
+Events:
+  DarkThemeOnBattery: false
+  Win10AllowLockscreenSwitch: false
+Notifications:
+  OnAutoThemeSwitching: true
+  OnSkipNextSwitch: true
+AutoSwitchNotify:
+  Enabled: false
+  GracePeriodMinutes: 5
+Hotkeys:
+  Enabled: false
+  ForceLight: 
+  ForceDark: 
+  NoForce: 
+  ToggleTheme: 
+  TogglePostpone: 
+  ToggleAutoThemeSwitch: 
+IdleChecker:
+  Enabled: false
+  Threshold: 5
+WallpaperSwitch:
+  Enabled: false
+  Component:
+    TypeLight: Individual
+    TypeDark: Individual
+    Position: Fill
+    GlobalWallpaper:
+      Light: 
+      Dark: 
+    SolidColors:
+      Light: '#FFFFFF'
+      Dark: '#000000'
+    Monitors:
+    - Id: '\\?\DISPLAY#GSM774B#5&8bb1cae&0&UID33025#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}'
+      LightThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
+      DarkThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
+    - Id: '\\?\DISPLAY#MTT1337#1&28a6823a&0&UID256#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}'
+      LightThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
+      DarkThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
+Updater:
+  AutoInstall: false
+  Enabled: true
+  Silent: false
+  DaysBetweenUpdateCheck: 7
+  CheckOnStart: false
+  VersionQueryUrl: 
+  DownloadBaseUrl: 
+  ZipCustomUrl: 
+  HashCustomUrl: 
+

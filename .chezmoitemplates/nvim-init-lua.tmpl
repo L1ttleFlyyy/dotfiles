@@ -439,7 +439,7 @@ vim.keymap.set("n", "<Leader>n", ":set invnumber invrelativenumber<CR>", {silent
 
 -- Filetype associations
 vim.api.nvim_create_autocmd({"BufNewFile", "BufRead"}, {
-        pattern = {"*.v", "*.vh", "*.sv", "*.svp"},
+        pattern = {"*.v", "*.vh", "*.sv", "*.svp", "*.prop"},
         command = "set filetype=systemverilog"
 })
 
