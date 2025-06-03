@@ -1,6 +1,1 @@
-{{- if eq .chezmoi.os "darwin" }}
---ignore-file=/Users/{{ .chezmoi.username }}/.config/fd/ignore
-{{- else if eq .chezmoi.os "linux" }}
---ignore-file=/home/{{ .chezmoi.username }}/.config/fd/ignore
-{{- else }}
-{{- end }}
+--ignore-file={{ .chezmoi.homeDir }}/.config/fd/ignore
