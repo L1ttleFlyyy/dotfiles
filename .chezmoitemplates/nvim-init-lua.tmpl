@@ -179,6 +179,12 @@ require("lazy").setup(
             dependencies = { "nvim-tree/nvim-web-devicons" },
             config = function()
                 require("fzf-lua").setup({
+                    keymap = {
+                        fzf = {
+                            ["tab"] = "down",
+                            ["shift-tab"] = "up",
+                        }
+                    },
                     files = {
                         -- cmd = "fd --type f --follow --hidden",
                     },
