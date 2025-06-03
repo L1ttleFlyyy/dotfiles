@@ -4,6 +4,7 @@ LICENSE
 {{- if eq .chezmoi.os "windows" }}
 .zshenv
 .ignore
+bin/
 .local/
 .config/*
 !.config/git
@@ -13,15 +14,14 @@ LICENSE
 AppData/
 .winconf/
 
+{{- if eq .chezmoi.os "linux" }}
 {{- if eq .chezmoi.osRelease.id "rhel" }}
 .zshenv
 .ignore
 .config/fd/
 .config/git/
-
-{{- else }}
-.config/colortheme/apply-theme.csh
+.config/zsh/
 
 {{- end }}
 {{- end }}
-
+{{- end }}
