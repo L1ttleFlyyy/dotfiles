@@ -55,7 +55,7 @@ if ( $status == 0 ) then
         setenv LS_COLORS `vivid generate tokyonight-night`
     endif
 endif
-    
+
 # Save theme to file
 if ( "$MY_THEME_SAVE_CONFIG" != "" ) then
     mkdir -p "`dirname $MY_CURRENT_THEME_FILE`"
@@ -68,8 +68,8 @@ if ( "$MY_THEME_SET_TMUX" != "" ) then
     if ( $status == 0 ) then
         tmux set-environment MY_CURRENT_THEME "$MY_CURRENT_THEME"
         tmux show-options -g | grep -E -o "^@\w+\s" | grep -E "@(_ctp|batt_|cpu_|ram_|thm_|catppuccin_)" | sed "s/^/set -Ugq /" | tr "\n" ";" | tmux source-file -
-        tmux source-file "$HOME/.tmux.conf"
-        
+        tmux source-file "$HOME/.config/tmux/tmux.conf"
+
         # Broadcast to other tmux panes if tmux-broadcast exists
         which tmux-broadcast >& /dev/null
         if ( $status == 0 ) then
