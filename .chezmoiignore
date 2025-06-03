@@ -1,6 +1,5 @@
 # .chezmoiignore
 LICENSE
-.config/colortheme/apply-theme.csh
 
 {{- if eq .chezmoi.os "windows" }}
 .zshenv
