@@ -7,10 +7,21 @@ LICENSE
 .local/
 .config/*
 !.config/git
-{{- end }}
 
-{{- if ne .chezmoi.os "windows" }}
+{{- else }}
 .chezmoiscripts/**
 AppData/
 .winconf/
+
+{{- if eq .chezmoi.osRelease.id "rhel" }}
+.zshenv
+.ignore
+.config/fd/
+.config/git/
+
+{{- else }}
+.config/colortheme/apply-theme.csh
+
 {{- end }}
+{{- end }}
+
