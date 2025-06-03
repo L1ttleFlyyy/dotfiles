@@ -1,5 +1,6 @@
 alias clear='echo -ne "\033c"'
 alias c='clear'
+alias ls='ls --color=auto'
 alias ll='ls -l'
 alias la='ls -a'
 alias du='du -h -d1'
@@ -14,7 +15,7 @@ alias czcd="cd $(chezmoi source-path)"
 
 # macos LS_COLORS
 command gls &> /dev/null && \
-    alias ls="gls --color"
+    alias ls="gls --color=auto"
 [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]] \
     && alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 {{- end }}
