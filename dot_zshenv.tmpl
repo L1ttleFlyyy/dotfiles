@@ -7,6 +7,32 @@ export LC_ALL="en_US.UTF-8"
 # System profile
 [[ -f "/etc/profile" ]]                         && emulate sh -c 'source /etc/profile'
 
+# System completions
+fpath_add() {
+    local dir="$1"
+    [[ -d "$dir" ]] || return 1
+    case ":$FPATH:" in
+        *":$dir:"*) return 1 ;; # Already in FPATH
+        *) FPATH="$dir:$FPATH" ;;
+    esac
+}
+
+# Standard system zsh completion directories
+for completion_dir in \
+    /usr/share/zsh/site-functions \
+    /usr/local/share/zsh/site-functions \
+    /usr/share/zsh/functions \
+    /usr/share/zsh/$ZSH_VERSION/functions \
+    /opt/local/share/zsh/site-functions \
+    /usr/share/zsh/vendor-completions \
+    /usr/local/share/zsh/vendor-completions
+do
+    fpath_add "$completion_dir"
+done
+
+unset completion_dir
+unset -f fpath_add
+
 # Paths
 [[ -d "$HOME/bin" ]]                            && export PATH="$HOME/bin:$PATH"
 [[ -d "$HOME/.local/bin" ]]                     && export PATH="$HOME/.local/bin:$PATH"
