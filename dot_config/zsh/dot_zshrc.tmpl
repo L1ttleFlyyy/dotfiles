@@ -121,6 +121,24 @@ alias apply-theme="__apply_theme_all"
 export EDITOR=nvim
 export SYSTEMD_EDITOR=nvim
 export SUDO_EDITOR=nvim
+{{- if ne .chezmoi.os "darwin" }}
+sudo_edit() {
+    [[ -z "$1" ]] && { echo "Usage: sudo_edit <file>"; return 1; }
+    local file="$1"
+    local tmp_file="/tmp/sudo_edit_$(basename "$file")_$$"
+    sudo cat "$file" > "$tmp_file" 2>/dev/null || touch "$tmp_file"
+
+    $EDITOR "$tmp_file"
+
+    if ! sudo diff -q "$file" "$tmp_file" &> /dev/null ; then
+        sudo tee "$file" < "$tmp_file" > /dev/null
+        echo "File $file updated"
+    else
+        echo "No changes made"
+    fi
+    rm -f "$tmp_file"
+}
+{{- end }}
 
 # MANPAGER
 export MANPAGER="nvim +Man!"
