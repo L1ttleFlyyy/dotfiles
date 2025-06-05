@@ -6,10 +6,17 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # =============================================================
-#                       homebrew completion
+#                       Homebrew
 # =============================================================
+{{- if eq .chezmoi.os "darwin" }}
+[[ -x "/opt/homebrew/bin/brew" ]] && eval "$(/opt/homebrew/bin/brew shellenv)"
+{{- end }}
+{{- if eq .chezmoi.os "linux" }}
+[[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+{{- end }}
 BREW_CMP_DIR="$(brew --prefix)/share/zsh/site-functions"
 FPATH="${BREW_CMP_DIR}:${FPATH}"
+export HOMEBREW_NO_ANALYTICS=1
 {{- if eq .chezmoi.os "darwin" }}
 
 # =============================================================
