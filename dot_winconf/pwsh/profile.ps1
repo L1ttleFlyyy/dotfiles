@@ -1,12 +1,14 @@
-Import-Module -Name Terminal-Icons
 Import-Module PSReadLine
-Import-Module PSFzf
 
+Import-Module PSFzf
 Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory 'Ctrl+r'
-Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 $Env:FZF_DEFAULT_OPTS = '--reverse --cycle --info=inline --pointer=">" --bind=ctrl-space:accept'
+# Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 # $Env:FZF_CTRL_T_OPTS = '--preview "bat --color=always {}"'
 $Env:FZF_ALT_C_OPTS = '--preview "tree {}"'
+
+# use PSCompletions for Tab
+Import-Module PSCompletions
 
 if (Get-Command scoop 2> $null) {
   $doUpdate = $true;
@@ -30,16 +32,16 @@ if ( (Get-WindowsAppsTheme) -eq "light") {
     $Env:MY_CURRENT_THEME = "light"
 }
 
-
-Remove-Item Alias:ls
 Remove-Item Alias:clear
 function clear {Write-Output "$([char]27)[H$([char]27)[2J" }
 function c { clear }
+
+Remove-Item Alias:ls
+Import-Module -Name Terminal-Icons
 function ls { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0] | Format-Wide } else { Get-ChildItem -Path . | Format-Wide } }
 function ll { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0]               } else { Get-ChildItem -Path .               } }
 function la { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0] -Force        } else { Get-ChildItem -Path . -Force        } }
 
-Set-Alias -Name du -Value dust
 Set-Alias -Name open -Value explorer
 
 Set-Alias -Name vim -Value nvim
