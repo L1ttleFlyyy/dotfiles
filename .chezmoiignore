@@ -1,5 +1,12 @@
 # .chezmoiignore
 LICENSE
+README.md
+
+{{- if ne .chezmoi.os "windows" }}
+.chezmoiscripts/**
+AppData/
+.winconf/
+{{- end }}
 
 {{- if eq .chezmoi.os "windows" }}
 .zshenv
@@ -8,11 +15,7 @@ bin/
 .local/
 .config/*
 !.config/git
-
-{{- else }}
-.chezmoiscripts/**
-AppData/
-.winconf/
+{{- end }}
 
 {{- if eq .chezmoi.os "linux" }}
 {{- if eq .chezmoi.osRelease.id "rhel" }}
@@ -21,10 +24,10 @@ AppData/
 .config/fd/
 .config/git/
 .config/zsh/
+{{- end }}
+{{- end }}
 
-{{- end }}
-{{- end }}
-{{- end }}
 {{- if ne .chezmoi.hostname "bazzite" }}
 .config/systemd/
+bin/wifi-smart-power
 {{- end }}
