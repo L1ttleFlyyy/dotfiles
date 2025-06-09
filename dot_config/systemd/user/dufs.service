@@ -1,0 +1,11 @@
+[Unit]
+Description=Dufs File Server - Home Directory
+
+[Service]
+Type=simple
+ExecStart=/home/linuxbrew/.linuxbrew/bin/dufs %h --bind 172.27.143.7 --port 5000 --allow-all --hidden '.*'
+Restart=on-failure
+RestartSec=20
+
+[Install]
+WantedBy=default.target

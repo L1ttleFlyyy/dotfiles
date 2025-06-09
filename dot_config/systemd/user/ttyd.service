@@ -1,0 +1,10 @@
+[Unit]
+Description=ttyd web terminal
+
+[Service]
+ExecStart=/home/linuxbrew/.linuxbrew/bin/ttyd -W -t enableTrzsz=true -t disableLeaveAlert=true -i 172.27.143.7 /home/linuxbrew/.linuxbrew/bin/zsh
+Restart=always
+RestartSec=20
+
+[Install]
+WantedBy=default.target
