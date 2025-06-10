@@ -153,5 +153,30 @@ export MANPAGER="nvim +Man!"
 # Source custom aliases
 source "$ZDOTDIR/alias.zsh"
 
+{{- if eq .chezmoi.hostname "bazzite" }}
+# =============================================================
+#                      WiFi Smart Initialization
+# =============================================================
+# WiFi Smart Power Management Hook
+wifi_smart_init() {
+    local TTYD_PORT=7681
+    local INTERFACE="wlp1s0"
+    local DAEMON_SCRIPT="$HOME/bin/wifi-smart-daemon"
+    if netstat -tn 2>/dev/null | grep -q ":$TTYD_PORT.*ESTABLISHED"; then
+        local WIFI_STATUS=$(iw dev "$INTERFACE" get power_save 2>/dev/null | grep -o "on\|off")
+        if [[ "$WIFI_STATUS" != "off" ]]; then
+            sudo iw dev "$INTERFACE" set power_save off 2>/dev/null
+        fi
+
+        # Start monitoring daemon if available
+        if [[ -x "$DAEMON_SCRIPT" ]]; then
+            nohup "$DAEMON_SCRIPT" >/dev/null 2>&1 & disown
+        fi
+    fi
+}
+wifi_smart_init
+unset wifi_smart_init
+{{- end }}
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f $ZDOTDIR/p10k.zsh ]] || source $ZDOTDIR/p10k.zsh

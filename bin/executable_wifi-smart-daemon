@@ -1,0 +1,67 @@
+#!/bin/bash
+# WiFi Smart Power Daemon - Self-Terminating Monitor
+# Only runs when ttyd is active, exits when idle
+
+TTYD_PORT=7681
+INTERFACE="wlp1s0"
+CHECK_INTERVAL=60
+PID_FILE="/tmp/wifi-smart-daemon.pid"
+
+log_msg() {
+    logger -t "wifi-smart-daemon" "$1"
+}
+
+check_running() {
+    if [[ -f "$PID_FILE" ]]; then
+        local existing_pid=$(cat "$PID_FILE" 2>/dev/null)
+        if [[ -n "$existing_pid" ]] && kill -0 "$existing_pid" 2>/dev/null; then
+            log_msg "Daemon already running with PID $existing_pid, exiting"
+            exit 0
+        else
+            log_msg "Stale PID file found, removing"
+            rm -f "$PID_FILE"
+        fi
+    fi
+}
+
+create_pid_lock() {
+    echo $$ > "$PID_FILE"
+    log_msg "Daemon started with PID $$"
+}
+
+check_ttyd_connections() {
+    netstat -tn 2>/dev/null | grep ":$TTYD_PORT.*ESTABLISHED" >/dev/null
+}
+
+cleanup() {
+    log_msg "Daemon shutting down, restoring WiFi power save"
+    if sudo iw dev "$INTERFACE" set power_save on 2>/dev/null; then
+        log_msg "✅ WiFi power save restored to ON"
+    else
+        log_msg "⚠️  Failed to restore WiFi power save"
+    fi
+    rm -f "$PID_FILE"
+    log_msg "Daemon terminated"
+    exit 0
+}
+
+trap cleanup SIGTERM SIGINT
+
+if ! iw dev "$INTERFACE" info >/dev/null 2>&1; then
+    log_msg "ERROR: WiFi interface $INTERFACE not found"
+    exit 1
+fi
+
+check_running
+create_pid_lock
+log_msg "Monitoring ttyd connections (port $TTYD_PORT) every ${CHECK_INTERVAL}s"
+
+while true; do
+    if ! check_ttyd_connections; then
+        log_msg "No ttyd connections active, self-terminating"
+        cleanup
+    else
+        log_msg "Monitoring: ttyd connection is active"
+    fi
+    sleep "$CHECK_INTERVAL"
+done

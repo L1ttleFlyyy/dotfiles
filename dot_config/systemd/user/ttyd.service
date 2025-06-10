@@ -5,6 +5,9 @@ Description=ttyd web terminal
 ExecStart=/home/linuxbrew/.linuxbrew/bin/ttyd -W -t enableTrzsz=true -t disableLeaveAlert=true -i 172.27.143.7 /home/linuxbrew/.linuxbrew/bin/zsh
 Restart=always
 RestartSec=20
+# Don't restart too aggressively
+StartLimitInterval=60
+StartLimitBurst=3
 
 [Install]
 WantedBy=default.target
