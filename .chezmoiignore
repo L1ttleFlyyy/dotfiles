@@ -29,5 +29,5 @@ bin/
 
 {{- if ne .chezmoi.hostname "bazzite" }}
 .config/systemd/
-bin/wifi-smart-power
+bin/wifi-smart-daemon
 {{- end }}
