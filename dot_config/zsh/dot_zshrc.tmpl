@@ -19,15 +19,16 @@ BREW_CMP_DIR="$(brew --prefix)/share/zsh/site-functions"
 FPATH="${BREW_CMP_DIR}:${FPATH}"
 export HOMEBREW_NO_ANALYTICS=1
 {{- if eq .chezmoi.os "darwin" }}
-
-# =============================================================
-#                       MACOS tweak
-# =============================================================
+# MACOS tweak
 export HOMEBREW_CASK_OPTS="--appdir=/Applications --fontdir=/Library/Fonts"
+{{- end }}
+{{- if eq .chezmoi.os "darwin" }}
 if [[ "$(stat -f '%Su' ${BREW_CMP_DIR})" != "${USER}" ]]; then
+{{- else }}
+if [[ "$(stat --format '%U' ${BREW_CMP_DIR})" != "${USER}" ]]; then
+{{- end }}
     ZSH_COMPINIT_OPTS="-u"
 fi
-{{- end }}
 unset BREW_CMP_DIR
 
 # =============================================================
