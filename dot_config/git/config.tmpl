@@ -46,3 +46,11 @@
 	helper = 
 	helper = !/opt/homebrew/bin/gh auth git-credential
 {{- end }}
+{{- if eq .chezmoi.hostname "localhost" }}
+[url "https://ghproxy.net/https://github.com/"]
+	insteadOf = https://github.com/
+[url "https://ghproxy.net/https://raw.githubusercontent.com/"]
+	insteadOf = https://raw.githubusercontent.com/
+[url "https://ghproxy.net/https://gist.github.com/"]
+	insteadOf = https://gist.github.com/
+{{- end }}
