@@ -9,36 +9,36 @@
     "keybindings": 
     [
         {
-            "id": "Terminal.ClosePane",
-            "keys": "alt+w"
-        },
-        {
-            "id": null,
-            "keys": "ctrl+alt+8"
-        },
-        {
-            "id": null,
-            "keys": "ctrl+tab"
+            "id": "Terminal.CopyToClipboard",
+            "keys": "ctrl+c"
         },
         {
             "id": "Terminal.OpenNewTabProfile0",
             "keys": "ctrl+shift+1"
         },
         {
-            "id": "Terminal.CopyToClipboard",
-            "keys": "ctrl+c"
+            "id": null,
+            "keys": "ctrl+tab"
+        },
+        {
+            "id": null,
+            "keys": "ctrl+alt+8"
+        },
+        {
+            "id": "Terminal.ClosePane",
+            "keys": "alt+w"
         },
         {
             "id": "Terminal.PasteFromClipboard",
             "keys": "ctrl+v"
         },
         {
-            "id": "Terminal.OpenNewTab",
-            "keys": "alt+t"
-        },
-        {
             "id": "Terminal.DuplicatePaneAuto",
             "keys": "alt+shift+d"
+        },
+        {
+            "id": "Terminal.OpenNewTab",
+            "keys": "alt+t"
         },
         {
             "id": "Terminal.OpenNewTabProfile1",
@@ -151,7 +151,8 @@
             },
             "font": 
             {
-                "face": "FiraCode Nerd Font"
+                "face": "SauceCodePro Nerd Font",
+                "size": 12
             }
         },
         "list": 
