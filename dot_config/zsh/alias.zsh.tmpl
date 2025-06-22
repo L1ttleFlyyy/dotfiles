@@ -20,3 +20,6 @@ command gls &> /dev/null && \
 [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]] \
     && alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 {{- end }}
+
+# additional user aliases
+[[ -r "${ZDOTDIR}/alias.local" ]] && source "${ZDOTDIR}/alias.local"
