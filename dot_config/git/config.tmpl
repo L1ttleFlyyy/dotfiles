@@ -46,5 +46,15 @@
 	helper = 
 	helper = !/opt/homebrew/bin/gh auth git-credential
 {{- end }}
+{{- if eq .chezmoi.os "windows" }}
+[credential "helperselector"]
+	selected = manager
+[credential "https://github.com"]
+	helper = 
+	helper = !'D:\\Apps\\Scoop\\apps\\gh\\current\\bin\\gh.exe' auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !'D:\\Apps\\Scoop\\apps\\gh\\current\\bin\\gh.exe' auth git-credential
+{{- end }}
 {{- if eq .chezmoi.hostname "localhost" }}
 {{- end }}
