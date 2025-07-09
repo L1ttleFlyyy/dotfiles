@@ -64,6 +64,13 @@ export FZF_ALT_C_OPTS='--preview "tree -C -a -d -L 2 {}"'
 export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
 
 # =============================================================
+#                      Start SSH-Agent
+# =============================================================
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    eval "$(ssh-agent -s)"  &> /dev/null
+fi
+
+# =============================================================
 #                      Zinit Setup
 # =============================================================
 # Configure zinit paths
