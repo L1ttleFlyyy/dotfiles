@@ -40,8 +40,9 @@ unset -f fpath_add
 
 {{- if eq .chezmoi.os "linux" }}
 # Java
-[ -s "/home/linuxbrew/.linuxbrew/opt/jabba/jabba.sh" ] && . "/home/linuxbrew/.linuxbrew/opt/jabba/jabba.sh"
-jabba use $(jabba ls | head -n1)
+[ -s "/home/linuxbrew/.linuxbrew/opt/jabba/jabba.sh" ] && \
+    . "/home/linuxbrew/.linuxbrew/opt/jabba/jabba.sh"  && \
+    jabba use $(jabba ls | head -n1)
 {{- end }}
 
 {{- if eq .chezmoi.hostname "localhost" }}
