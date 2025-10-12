@@ -9,18 +9,6 @@
     "keybindings": 
     [
         {
-            "id": "Terminal.CopyToClipboard",
-            "keys": "ctrl+c"
-        },
-        {
-            "id": "Terminal.OpenNewTabProfile0",
-            "keys": "ctrl+shift+1"
-        },
-        {
-            "id": null,
-            "keys": "ctrl+tab"
-        },
-        {
             "id": null,
             "keys": "ctrl+alt+8"
         },
@@ -29,16 +17,28 @@
             "keys": "alt+w"
         },
         {
+            "id": null,
+            "keys": "ctrl+tab"
+        },
+        {
+            "id": "Terminal.OpenNewTabProfile0",
+            "keys": "ctrl+shift+1"
+        },
+        {
+            "id": "Terminal.CopyToClipboard",
+            "keys": "ctrl+c"
+        },
+        {
             "id": "Terminal.PasteFromClipboard",
             "keys": "ctrl+v"
         },
         {
-            "id": "Terminal.DuplicatePaneAuto",
-            "keys": "alt+shift+d"
-        },
-        {
             "id": "Terminal.OpenNewTab",
             "keys": "alt+t"
+        },
+        {
+            "id": "Terminal.DuplicatePaneAuto",
+            "keys": "alt+shift+d"
         },
         {
             "id": "Terminal.OpenNewTabProfile1",
@@ -57,12 +57,12 @@
             "keys": "alt+1"
         },
         {
-            "id": "Terminal.SwitchToTab5",
-            "keys": "alt+6"
-        },
-        {
             "id": null,
             "keys": "ctrl+alt+1"
+        },
+        {
+            "id": "Terminal.SwitchToTab5",
+            "keys": "alt+6"
         },
         {
             "id": "Terminal.SwitchToTab1",
@@ -70,11 +70,11 @@
         },
         {
             "id": null,
-            "keys": "ctrl+alt+9"
+            "keys": "ctrl+alt+2"
         },
         {
             "id": null,
-            "keys": "ctrl+alt+2"
+            "keys": "ctrl+alt+9"
         },
         {
             "id": "Terminal.SwitchToTab2",
@@ -90,11 +90,11 @@
         },
         {
             "id": null,
-            "keys": "ctrl+alt+7"
+            "keys": "ctrl+alt+4"
         },
         {
             "id": null,
-            "keys": "ctrl+alt+4"
+            "keys": "ctrl+alt+7"
         },
         {
             "id": "Terminal.SwitchToTab4",
@@ -138,6 +138,22 @@
         },
         {
             "type": "remainingProfiles"
+        },
+        {
+            "allowEmpty": false,
+            "entries": 
+            [
+                {
+                    "commandline": null,
+                    "name": null,
+                    "source": "Windows.Terminal.SSH",
+                    "type": "matchProfiles"
+                }
+            ],
+            "icon": "\ue969",
+            "inline": "auto",
+            "name": "SSH",
+            "type": "folder"
         }
     ],
     "profiles": 
@@ -158,14 +174,14 @@
         "list": 
         [
             {
-                "commandline": "\"C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe\"",
+                "commandline": "\"C:\\Users\\l1ttleflyyy\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.EXE\"",
                 "guid": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
                 "hidden": false,
                 "name": "PowerShell",
                 "source": "Windows.Terminal.PowershellCore"
             },
             {
-                "commandline": "\"C:\\Program Files\\PowerShell\\7-preview\\pwsh.exe\"",
+                "commandline": "\"C:\\Users\\l1ttleflyyy\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.EXE\"",
                 "elevate": true,
                 "guid": "{151b5ad2-528a-46d6-af06-57b6c5ff391b}",
                 "hidden": false,
@@ -190,6 +206,48 @@
                 "hidden": true,
                 "name": "Azure Cloud Shell",
                 "source": "Windows.Terminal.Azure"
+            },
+            {
+                "guid": "{80adec80-99a1-556f-83ac-4dc68abdd4a5}",
+                "hidden": false,
+                "name": "SSH - beelink",
+                "source": "Windows.Terminal.SSH"
+            },
+            {
+                "guid": "{a5ac2079-65d3-5e95-9a0e-60d5f565ae3d}",
+                "hidden": false,
+                "name": "SSH - mcserver",
+                "source": "Windows.Terminal.SSH"
+            },
+            {
+                "guid": "{bc555ed9-18ad-559a-9d72-8e7bea72f321}",
+                "hidden": false,
+                "name": "SSH - mycone",
+                "source": "Windows.Terminal.SSH"
+            },
+            {
+                "guid": "{43c72cc5-dc00-530d-89ee-4bd47f91e361}",
+                "hidden": false,
+                "name": "SSH - ocone",
+                "source": "Windows.Terminal.SSH"
+            },
+            {
+                "guid": "{6511a8c8-33f6-59f8-8024-8876a663f158}",
+                "hidden": false,
+                "name": "SSH - tricone",
+                "source": "Windows.Terminal.SSH"
+            },
+            {
+                "guid": "{3a7d8475-eb33-552b-9a4e-486c0d440cd5}",
+                "hidden": false,
+                "name": "SSH - aliyun",
+                "source": "Windows.Terminal.SSH"
+            },
+            {
+                "guid": "{858e168f-0be3-5208-803d-e95c194eb59d}",
+                "hidden": false,
+                "name": "SSH - dmit",
+                "source": "Windows.Terminal.SSH"
             }
         ]
     },
