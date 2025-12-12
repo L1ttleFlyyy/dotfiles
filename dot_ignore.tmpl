@@ -1,0 +1,23 @@
+.local/share/
+.local/state/
+.var/
+.vim/
+.dbus/
+.vnc/
+.cache/
+.mozilla/
+.vscode-server/
+Library/
+Perforce/
+
+{{- if eq .chezmoi.os "linux" }}
+{{- if eq .chezmoi.osRelease.id "rhel" }}
+homebrew/
+.snapshot/
+.ansys/
+.icons/
+.themes/
+.thumbnails/
+*.com.db
+{{- end }}
+{{- end }}
