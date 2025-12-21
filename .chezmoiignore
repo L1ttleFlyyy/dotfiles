@@ -31,3 +31,8 @@ bin/
 .config/systemd/
 bin/wifi-smart-daemon
 {{- end }}
+
+{{- if ne .chezmoi.hostname "hp" }}
+.var/app/
+.config/autostart/
+{{- end }}
