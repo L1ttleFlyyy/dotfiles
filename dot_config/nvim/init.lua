@@ -1,4 +1,3 @@
--- chezmoi:template:left-delimiter=<{ right-delimiter=}>
 -- vim: ft=lua
 -- ===========================================
 -- Minimal Neovim Configuration
@@ -562,3 +561,4 @@ vim.cmd(
   cnoreabbrev Set set
 ]]
 )
+
