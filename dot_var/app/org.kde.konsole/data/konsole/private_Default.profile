@@ -1,5 +1,5 @@
 [Appearance]
-ColorScheme=Catppuccin-Mocha
+ColorScheme=Scratchy
 Font=CodeNewRoman Nerd Font,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
 
 [General]
@@ -7,6 +7,12 @@ Command=/home/linuxbrew/.linuxbrew/bin/zsh
 Name=Default
 Parent=FALLBACK/
 SemanticInputClick=true
+
+[Interaction Options]
+WordCharacters=:@-./_~?&=%+#
+
+[Keyboard]
+KeyBindings=macos
 
 [Scrolling]
 HistorySize=10000
