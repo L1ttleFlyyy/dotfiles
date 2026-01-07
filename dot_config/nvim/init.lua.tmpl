@@ -435,7 +435,7 @@ require("lazy").setup(
 <<- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" >>
 local theme = os.getenv("MY_CURRENT_THEME")
 local inssh = os.getenv("SSH_CLIENT")
-if theme == "light" and inssh != nil then
+if theme == "light" and inssh ~= nil then
 <<- else >>
 local theme = os.getenv("MY_CURRENT_THEME")
 if theme == "light" then
