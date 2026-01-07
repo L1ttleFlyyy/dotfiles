@@ -17,14 +17,8 @@ bin/
 !.config/git
 {{- end }}
 
-{{- if eq .chezmoi.os "linux" }}
-{{- if eq .chezmoi.osRelease.id "rhel" }}
-.zshenv
-.ignore
-.config/fd/
-.config/git/
-.config/zsh/
-{{- end }}
+{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+.config/git/config
 {{- end }}
 
 {{- if ne .chezmoi.hostname "bazzite" }}

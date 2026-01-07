@@ -1,4 +1,11 @@
 # vim: ft=zsh
+{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+# suppress the bash unset non-exsistent warning
+unset() { builtin unset "$@" 2>/dev/null || true }
+source ~/.bashrc
+unset -f unset
+
+{{- end}}
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -23,16 +30,18 @@ if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
 {{- if eq .chezmoi.os "darwin" }}
     # MACOS tweak
     export HOMEBREW_CASK_OPTS="--appdir=/Applications --fontdir=/Library/Fonts"
-{{- end }}
-{{- if eq .chezmoi.os "darwin" }}
     if [[ "$(stat -f '%Su' ${BREW_CMP_DIR})" != "${USER}" ]]; then
-{{- else }}
+{{- end }}
+{{- if eq .chezmoi.os "linux" }}
     if [[ "$(stat --format '%U' ${BREW_CMP_DIR})" != "${USER}" ]]; then
 {{- end }}
         ZSH_COMPINIT_OPTS="-u"
     fi
     unset BREW_CMP_DIR
 fi
+{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+ZSH_COMPINIT_OPTS+=" -u"
+{{- end }}
 
 # =============================================================
 #                   Zsh State Management

@@ -22,8 +22,7 @@ __pycache__/
 *.class
 
 
-{{- if eq .chezmoi.os "linux" }}
-{{- if eq .chezmoi.osRelease.id "rhel" }}
+{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 ####### personal
 vnc_logs/
 amx/
@@ -45,5 +44,4 @@ specs/
 upf/
 syn/
 power_estimation/
-{{- end }}
 {{- end }}

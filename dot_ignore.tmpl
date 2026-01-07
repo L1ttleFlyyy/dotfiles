@@ -10,8 +10,7 @@
 Library/
 Perforce/
 
-{{- if eq .chezmoi.os "linux" }}
-{{- if eq .chezmoi.osRelease.id "rhel" }}
+{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 homebrew/
 .snapshot/
 .ansys/
@@ -19,5 +18,4 @@ homebrew/
 .themes/
 .thumbnails/
 *.com.db
-{{- end }}
 {{- end }}
