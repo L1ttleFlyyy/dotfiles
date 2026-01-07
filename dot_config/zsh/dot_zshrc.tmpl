@@ -17,14 +17,13 @@ fi
 # =============================================================
 #                       Homebrew
 # =============================================================
-{{- if eq .chezmoi.os "darwin" }}
 if [[ -x "/opt/homebrew/bin/brew" ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
-{{- end }}
-{{- if eq .chezmoi.os "linux" }}
+fi
 if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-{{- end }}
+fi
+if command -v brew &>/dev/null; then
     BREW_CMP_DIR="$(brew --prefix)/share/zsh/site-functions"
     FPATH="${BREW_CMP_DIR}:${FPATH}"
     export HOMEBREW_NO_ANALYTICS=1
@@ -56,9 +55,11 @@ mkdir -p $HOME/.local/state/less
 mkdir -p $HOME/.local/state/zsh
 
 export LESSHISTFILE="$HOME/.local/state/less/history"
-export HISTFILE="$HOME/.local/state/zsh/history"
-export SAVEHIST=10000
-export HISTSIZE=10000
+
+HISTFILE="$HOME/.local/state/zsh/history"
+SAVEHIST=10000
+HISTSIZE=10000
+WORDCHARS='_-.*'
 
 setopt SHARE_HISTORY
 setopt INC_APPEND_HISTORY
