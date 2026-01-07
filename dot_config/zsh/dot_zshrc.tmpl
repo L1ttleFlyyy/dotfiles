@@ -13,6 +13,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+{{- if ne (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 # =============================================================
 #                       Homebrew
 # =============================================================
@@ -39,8 +40,11 @@ if [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]]; then
     fi
     unset BREW_CMP_DIR
 fi
-{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
-ZSH_COMPINIT_OPTS+=" -u"
+{{- else }}
+# =============================================================
+#                       AutoComp
+# =============================================================
+ZSH_COMPINIT_OPTS="-u"
 {{- end }}
 
 # =============================================================
@@ -72,12 +76,14 @@ export FZF_ALT_C_OPTS='--preview "tree -C -a -d -L 2 {}"'
 # rg config
 export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
 
+{{- if ne (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 # =============================================================
 #                      Start SSH-Agent
 # =============================================================
 if [ -z "$SSH_AUTH_SOCK" ]; then
     eval "$(ssh-agent -s)"  &> /dev/null
 fi
+{{- end }}
 
 # =============================================================
 #                      Zinit Setup
@@ -118,7 +124,7 @@ unset ZSH_COMPINIT_OPTS
 # FZF keybindings: must be after fzf-tab
 source <(fzf --zsh) 
 # zsh-autosuggestions keybinding:
-bindkey '^ ' autosuggest-accept # accept with ctrl-space
+# bindkey '^ ' autosuggest-accept # accept with ctrl-space
 
 # =============================================================
 #                       fzf-tab config
@@ -140,8 +146,12 @@ zstyle ':fzf-tab:*' popup-min-size 120 10
 # =============================================================
 
 # apply-theme quick-cmd
-source $HOME/.config/colortheme/apply-theme.sh && __apply_theme_for_rc;
-alias apply-theme="__apply_theme_all"
+MY_THEME_FIXED=
+{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+[[ -z "$SSH_CLIENT" ]] && MY_THEME_FIXED="dark"
+{{- end }}
+source $HOME/.config/colortheme/apply-theme.sh && __apply_theme_for_rc $MY_THEME_FIXED;
+alias apply-theme="__apply_theme_all ${MY_THEME_FIXED}"
 
 # =============================================================
 #                      User Aliases

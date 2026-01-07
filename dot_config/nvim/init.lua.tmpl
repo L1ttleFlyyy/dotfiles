@@ -1,3 +1,4 @@
+-- chezmoi:template:left-delimiter=<< right-delimiter=>>
 -- vim: ft=lua
 -- ===========================================
 -- Minimal Neovim Configuration
@@ -150,8 +151,10 @@ require("lazy").setup(
                             "toml",
                             "bash",
                             "markdown",
-                            "markdown_inline",
-                            "verilog"
+<<- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" >>
+                            "verilog",
+<<- end >>
+                            "markdown_inline"
                         },
                         -- Install parsers synchronously (only applied to `ensure_installed`)
                         sync_install = false,
@@ -429,8 +432,14 @@ require("lazy").setup(
 -- colorscheme
 -- ===========================================
 
+<<- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" >>
+local theme = os.getenv("MY_CURRENT_THEME")
+local inssh = os.getenv("SSH_CLIENT")
+if theme == "light" and inssh != nil then
+<<- else >>
 local theme = os.getenv("MY_CURRENT_THEME")
 if theme == "light" then
+<<- end >>
     vim.o.background = "light"
     vim.cmd.colorscheme "gruvbox"
 else
