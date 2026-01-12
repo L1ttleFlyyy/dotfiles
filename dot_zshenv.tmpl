@@ -38,6 +38,10 @@ unset -f fpath_add
 [[ -d "$HOME/bin" ]]                            && export PATH="$HOME/bin:$PATH"
 [[ -d "$HOME/.local/bin" ]]                     && export PATH="$HOME/.local/bin:$PATH"
 
+# eget config
+export EGET_CONFIG="$HOME/.config/eget/config.toml"
+
+
 {{- if and (eq .chezmoi.os "linux") (ne (dig "id" "none" .chezmoi.osRelease) "rhel") }}
 # Java
 [ -s "/home/linuxbrew/.linuxbrew/opt/jabba/jabba.sh" ] && \
