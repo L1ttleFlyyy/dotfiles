@@ -248,17 +248,14 @@ require("lazy").setup(
                     },
                     sections = {}, -- Empty sections to disable bottom
                     inactive_sections = {},
-                    winbar = {
+                    tabline = {
                         lualine_a = {{"mode", separator = {left = "\u{e0b6}"}, right_padding = 2}},
                         lualine_b = {"branch", "diff", "diagnostics"},
-                        lualine_c = {{"filename", path = 1}}, -- path = 1 shows relative path
+                        lualine_c = {{"buffers", show_filename_only = false, buffers_color = {active = {gui = 'bold'}}}},
                         lualine_x = {"encoding", "fileformat", "filetype"},
                         lualine_y = {"progress"},
                         lualine_z = {{"location", separator = {right = "\u{e0b4}"}, left_padding = 2}}
                     },
-                    inactive_winbar = {
-                        lualine_c = {{"filename", path = 1}} -- path = 1 shows relative path
-                    }
                 }
             end
         },
