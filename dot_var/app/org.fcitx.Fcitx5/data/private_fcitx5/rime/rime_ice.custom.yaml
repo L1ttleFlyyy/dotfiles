@@ -1,0 +1,6 @@
+patch:
+  # 关闭拼音提示 (显示字数设为0)
+  "translator/spelling_hints": 0
+
+  # 关闭强制显示注释 (让界面更清爽)
+  "translator/always_show_comments": false
