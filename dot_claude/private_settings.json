@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch",
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(ujust:*)",
+      "Bash(sudo journalctl:*)",
+      "Bash(sudo dmesg:*)",
+    ],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "default"
+  },
+  "alwaysThinkingEnabled": true
+}

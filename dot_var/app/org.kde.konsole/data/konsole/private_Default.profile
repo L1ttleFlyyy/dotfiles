@@ -1,6 +1,6 @@
 [Appearance]
 ColorScheme=Scratchy
-Font=CodeNewRoman Nerd Font,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+Font=CodeNewRoman Nerd Font,14,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
 
 [General]
 Command=/home/linuxbrew/.linuxbrew/bin/zsh
