@@ -6,7 +6,7 @@
       "Bash(ls:*)",
       "Bash(ujust:*)",
       "Bash(sudo journalctl:*)",
-      "Bash(sudo dmesg:*)",
+      "Bash(sudo dmesg:*)"
     ],
     "deny": [],
     "ask": [],
