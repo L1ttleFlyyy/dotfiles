@@ -17,11 +17,17 @@ if (Get-Command scoop 2> $null) {
       $doUpdate = $false
     }
   }
+
   if ($doUpdate) {
-    scoop update
-    scoop update -a
-    scoop cleanup -a
-    Get-Date -UFormat "%s" > "$env:LOCALAPPDATA\last-scoop-update-timestamp"
+      $continue = Read-Host -Prompt "Do you want to update Scoop? Y/N"
+        if (($continue -eq 'Y') -or ($continue -eq 'y')) {
+            scoop update
+            scoop update -a
+            scoop cleanup -a
+            Get-Date -UFormat "%s" > "$env:LOCALAPPDATA\last-scoop-update-timestamp"
+        } else {
+            Write-Output "Skipping update"
+        }
   }
 }
 
