@@ -31,3 +31,7 @@ bin/wifi-smart-daemon
 .config/autostart/
 .config/environment.d/
 {{- end }}
+
+{{- if eq .chezmoi.username "czcz" }}
+.claude
+{{- end }}
