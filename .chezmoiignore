@@ -32,6 +32,6 @@ bin/wifi-smart-daemon
 .config/environment.d/
 {{- end }}
 
-{{- if eq .chezmoi.username "czcz" }}
+{{- if eq .chezmoi.username "cxcx" }}
 .claude
 {{- end }}
