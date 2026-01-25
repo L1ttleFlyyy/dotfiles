@@ -21,15 +21,12 @@ bin/
 .config/git/config
 {{- end }}
 
-{{- if ne .chezmoi.hostname "bazzite" }}
-.config/systemd/
-bin/wifi-smart-daemon
-{{- end }}
-
-{{- if ne .chezmoi.hostname "hp" }}
+{{- if ne (dig "id" "none" .chezmoi.osRelease) "bazzite" }}
 .var/app/
+.config/systemd/
 .config/autostart/
 .config/environment.d/
+bin/wifi-smart-daemon
 {{- end }}
 
 {{- if eq .chezmoi.username "cxcx" }}
