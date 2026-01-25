@@ -135,46 +135,47 @@ require("lazy").setup(
             "nvim-treesitter/nvim-treesitter",
             build = ":TSUpdate",
             config = function()
-                require("nvim-treesitter.configs").setup(
-                    {
-                        -- Only install parsers you need
-                        ensure_installed = {
-                            "lua",
-                            "vim",
-                            "vimdoc",
-                            "c",
-                            "cpp",
-                            "python",
-                            "perl",
-                            "json",
-                            "yaml",
-                            "toml",
-                            "bash",
-                            "markdown",
-<<- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" >>
-                            "verilog",
-<<- end >>
-                            "markdown_inline"
-                        },
-                        -- Install parsers synchronously (only applied to `ensure_installed`)
-                        sync_install = false,
-                        -- Automatically install missing parsers when entering buffer
-                        auto_install = false, -- Keep this false to avoid surprises
-                        highlight = {
-                            enable = true,
-                            -- IMPORTANT: Don't override existing syntax highlighting completely
-                            additional_vim_regex_highlighting = false
-                        },
-                        indent = {
-                            enable = true,
-                            disable = {} -- Add languages here if they cause issues, e.g. {"verilog", "systemverilog"}
-                        },
-                        -- DISABLED: Keep this minimal for now
-                        incremental_selection = {
-                            enable = false
-                        }
-                    }
-                )
+                local treesitter = require("nvim-treesitter")
+
+                -- Initialize the plugin
+                treesitter.setup()
+
+                -- Replaces ensure_installed
+                -- Note: This installs the parsers manually
+                treesitter.install({
+                    "lua",
+                    "vim",
+                    "vimdoc",
+                    "c",
+                    "cpp",
+                    "python",
+                    "perl",
+                    "json",
+                    "yaml",
+                    "toml",
+                    "bash",
+                    "markdown",
+        <<- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" >>
+                    "verilog",
+        <<- end >>
+                    "markdown_inline"
+                })
+
+                -- Replaces highlight.enable and indent.enable
+                -- Uses Neovim's native treesitter integration
+                vim.api.nvim_create_autocmd("FileType", {
+                    -- Update this list to match the filetypes (not just parser names) of your installed languages
+                    pattern = {
+                        "lua", "vim", "help", "c", "cpp", "python", "perl",
+                        "json", "yaml", "toml", "bash", "sh", "markdown", "verilog"
+                    },
+                    callback = function()
+                        -- Enable native highlighting
+                        vim.treesitter.start()
+                        -- Enable treesitter-based indentation
+                        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+                    end,
+                })
             end
         },
         {
