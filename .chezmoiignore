@@ -29,6 +29,11 @@ bin/
 bin/wifi-smart-daemon
 {{- end }}
 
+{{- if eq .chezmoi.username "bazzite" }}
+.config/autostart/lockscreen.desktop
+.config/environment.d/touchpad-fix.conf
+{{- end }}
+
 {{- if eq .chezmoi.username "cxcx" }}
 .claude
 {{- end }}
