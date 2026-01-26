@@ -1,4 +1,4 @@
--- chezmoi:template:left-delimiter=<< right-delimiter=>>
+-- chezmoi:template:left-delimiter=--{ right-delimiter=}--
 -- vim: ft=lua
 -- ===========================================
 -- Minimal Neovim Configuration
@@ -29,7 +29,7 @@ vim.opt.softtabstop = 4 -- Number of spaces per Tab press
 vim.opt.shiftwidth = 4 -- Number of spaces for each step of (auto)indent
 vim.opt.expandtab = true -- Convert tabs to spaces
 vim.opt.autoindent = true -- Copy indent from current line when starting new line
--- vim.opt.smartindent = true     -- Smart auto-indenting; use nvim-treesitter instead!
+vim.opt.smartindent = true -- Smart auto-indenting
 
 -- Show whitespace characters
 vim.opt.list = true
@@ -130,52 +130,14 @@ require("lazy").setup(
                 {"<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>"}
             }
         },
-        -- Treesitter for better syntax highlighting
         {
-            "nvim-treesitter/nvim-treesitter",
-            build = ":TSUpdate",
-            config = function()
-                local treesitter = require("nvim-treesitter")
+            "sheerun/vim-polyglot",
+            init = function()
+                vim.g.verilog_syntax_fold_lst = "all"
+                vim.g.verilog_verbose_error_jump = 1
 
-                -- Initialize the plugin
-                treesitter.setup()
-
-                -- Replaces ensure_installed
-                -- Note: This installs the parsers manually
-                treesitter.install({
-                    "lua",
-                    "vim",
-                    "vimdoc",
-                    "c",
-                    "cpp",
-                    "python",
-                    "perl",
-                    "json",
-                    "yaml",
-                    "toml",
-                    "bash",
-                    "markdown",
-        <<- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" >>
-                    "verilog",
-        <<- end >>
-                    "markdown_inline"
-                })
-
-                -- Replaces highlight.enable and indent.enable
-                -- Uses Neovim's native treesitter integration
-                vim.api.nvim_create_autocmd("FileType", {
-                    -- Update this list to match the filetypes (not just parser names) of your installed languages
-                    pattern = {
-                        "lua", "vim", "help", "c", "cpp", "python", "perl",
-                        "json", "yaml", "toml", "bash", "sh", "markdown", "verilog"
-                    },
-                    callback = function()
-                        -- Enable native highlighting
-                        vim.treesitter.start()
-                        -- Enable treesitter-based indentation
-                        vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-                    end,
-                })
+                -- to disable:
+                -- vim.g.polyglot_disabled = { 'markdown' }
             end
         },
         {
@@ -429,14 +391,14 @@ require("lazy").setup(
 -- ===========================================
 -- colorscheme
 -- ===========================================
-<<- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" >>
+--{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
 local theme = os.getenv("MY_CURRENT_THEME")
 local inssh = os.getenv("SSH_CLIENT")
 if theme == "light" and inssh ~= nil then
-<<- else >>
+--{- else }--
 local theme = os.getenv("MY_CURRENT_THEME")
 if theme == "light" then
-<<- end >>
+--{- end }--
     vim.o.background = "light"
     vim.cmd.colorscheme "gruvbox"
 else
@@ -504,7 +466,7 @@ vim.keymap.set("n", "<Leader>n", ":set invnumber invrelativenumber<CR>", {silent
 -- Filetype associations
 vim.api.nvim_create_autocmd({"BufNewFile", "BufRead"}, {
         pattern = {"*.v", "*.vh", "*.sv", "*.svp", "*.prop"},
-        command = "set filetype=systemverilog"
+        command = "set filetype=verilog_systemverilog"
 })
 
 -- propagate diff filetype

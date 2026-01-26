@@ -1,14 +1,15 @@
--- chezmoi:template:left-delimiter=<< right-delimiter=>>
+# vim: ft=toml
+# chezmoi:template:left-delimiter=#{ right-delimiter=}#
 [edit]
     apply = false
 [diff]
     command = "nvim"
     args = ["-d", "{{ .Target }}", "{{ .Destination }}"]
-<<- if eq .chezmoi.os "windows" >>
+#{- if eq .chezmoi.os "windows" }#
 [cd]
     command = "pwsh"
     args = ["-NoLogo"]
 [interpreters.ps1]
     command = "pwsh"
     args = ["-NoLogo", "-NoProfile"]
-<<- end >>
+#{- end }#
