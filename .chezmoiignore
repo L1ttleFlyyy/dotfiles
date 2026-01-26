@@ -19,6 +19,7 @@ bin/
 
 {{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 .config/git/config
+.claude
 {{- end }}
 
 {{- if ne (dig "id" "none" .chezmoi.osRelease) "bazzite" }}
