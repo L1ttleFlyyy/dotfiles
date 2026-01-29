@@ -206,48 +206,6 @@
                 "hidden": true,
                 "name": "Azure Cloud Shell",
                 "source": "Windows.Terminal.Azure"
-            },
-            {
-                "guid": "{80adec80-99a1-556f-83ac-4dc68abdd4a5}",
-                "hidden": false,
-                "name": "SSH - beelink",
-                "source": "Windows.Terminal.SSH"
-            },
-            {
-                "guid": "{a5ac2079-65d3-5e95-9a0e-60d5f565ae3d}",
-                "hidden": false,
-                "name": "SSH - mcserver",
-                "source": "Windows.Terminal.SSH"
-            },
-            {
-                "guid": "{bc555ed9-18ad-559a-9d72-8e7bea72f321}",
-                "hidden": false,
-                "name": "SSH - mycone",
-                "source": "Windows.Terminal.SSH"
-            },
-            {
-                "guid": "{43c72cc5-dc00-530d-89ee-4bd47f91e361}",
-                "hidden": false,
-                "name": "SSH - ocone",
-                "source": "Windows.Terminal.SSH"
-            },
-            {
-                "guid": "{6511a8c8-33f6-59f8-8024-8876a663f158}",
-                "hidden": false,
-                "name": "SSH - tricone",
-                "source": "Windows.Terminal.SSH"
-            },
-            {
-                "guid": "{3a7d8475-eb33-552b-9a4e-486c0d440cd5}",
-                "hidden": false,
-                "name": "SSH - aliyun",
-                "source": "Windows.Terminal.SSH"
-            },
-            {
-                "guid": "{858e168f-0be3-5208-803d-e95c194eb59d}",
-                "hidden": false,
-                "name": "SSH - dmit",
-                "source": "Windows.Terminal.SSH"
             }
         ]
     },

@@ -8,28 +8,8 @@ $Env:FZF_DEFAULT_OPTS = '--reverse --cycle --info=inline --pointer=">" --bind=ct
 $Env:FZF_ALT_C_OPTS = '--preview "tree {}"'
 
 # use PSCompletions for Tab
+Import-Module -Name Terminal-Icons
 Import-Module PSCompletions
-
-if (Get-Command scoop 2> $null) {
-  $doUpdate = $true;
-  if ($lastupdate = Get-Content "$env:LOCALAPPDATA\last-scoop-update-timestamp" 2> $null) {
-    if ( (Get-Date -UnixTimeSeconds ([int64]$lastupdate + 30 * 24 * 3600)) -gt (Get-Date) ) {
-      $doUpdate = $false
-    }
-  }
-
-  if ($doUpdate) {
-      $continue = Read-Host -Prompt "Do you want to update Scoop? Y/N"
-        if (($continue -eq 'Y') -or ($continue -eq 'y')) {
-            scoop update
-            scoop update -a
-            scoop cleanup -a
-            Get-Date -UFormat "%s" > "$env:LOCALAPPDATA\last-scoop-update-timestamp"
-        } else {
-            Write-Output "Skipping update"
-        }
-  }
-}
 
 $DUSER = "D:\Users\$env:USERNAME\"
 $Env:EDITOR = "nvim"
@@ -43,7 +23,6 @@ function clear {Write-Output "$([char]27)[H$([char]27)[2J" }
 function c { clear }
 
 Remove-Item Alias:ls
-Import-Module -Name Terminal-Icons
 function ls { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0] | Format-Wide } else { Get-ChildItem -Path . | Format-Wide } }
 function ll { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0]               } else { Get-ChildItem -Path .               } }
 function la { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0] -Force        } else { Get-ChildItem -Path . -Force        } }
@@ -85,4 +64,26 @@ function jabba
         if (-not $expression -eq "") { Invoke-Expression $expression }
     }
     Remove-Item -Force $fd3
+}
+
+# auto scoop update
+if (Get-Command scoop 2> $null) {
+  $doUpdate = $true;
+  if ($lastupdate = Get-Content "$env:LOCALAPPDATA\last-scoop-update-timestamp" 2> $null) {
+    if ( (Get-Date -UnixTimeSeconds ([int64]$lastupdate + 30 * 24 * 3600)) -gt (Get-Date) ) {
+      $doUpdate = $false
+    }
+  }
+
+  if ($doUpdate) {
+      $continue = Read-Host -Prompt "Do you want to update Scoop? Y/N"
+        if (($continue -eq 'Y') -or ($continue -eq 'y')) {
+            scoop update
+            scoop update -a
+            scoop cleanup -a
+            Get-Date -UFormat "%s" > "$env:LOCALAPPDATA\last-scoop-update-timestamp"
+        } else {
+            Write-Output "Skipping update"
+        }
+  }
 }
