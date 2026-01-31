@@ -44,8 +44,8 @@ if (Get-Command chezmoi 2> $null) {
 }
 
 if (Get-Command oh-my-posh 2> $null) {
-    $omp_theme_dark  = "$env:posh_themes_path/tokyo.omp.json"
-    $omp_theme_light = "$env:posh_themes_path/quick-term.omp.json"
+    $omp_theme_dark  = "$env:posh_themes_path/di4am0nd.omp.json"
+    $omp_theme_light = "$env:posh_themes_path/negligible.omp.json"
     $omp_theme = $omp_theme_dark;
     if ( $Env:MY_CURRENT_THEME -eq "light" ) {
         $omp_theme = $omp_theme_light
