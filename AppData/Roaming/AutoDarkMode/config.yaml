@@ -17,9 +17,9 @@ SystemSwitch:
   Component:
     Mode: Switch
     TaskbarSwitchDelay: 1200
-    TaskbarColorOnAdaptive: false
-    TaskbarColorWhenNonAdaptive: Light
-    DWMPrevalenceSwitch: false
+    TaskbarColorSwitch: true
+    TaskbarColorDuring: Dark
+    DWMPrevalenceSwitch: true
     DWMPrevalenceEnableTheme: Light
 TouchKeyboardSwitch:
   Enabled: false
@@ -28,18 +28,12 @@ ColorizationSwitch:
   Enabled: true
   Component:
     LightHex: '#FF0078D5'
-    DarkHex: '#FF0078D5'
+    DarkHex: '#FF477D83'
     LightAutoColorization: true
     DarkAutoColorization: true
 ColorFilterSwitch:
   Enabled: false
   Component: {}
-OfficeSwitch:
-  Enabled: false
-  Component:
-    Mode: Switch
-    LightTheme: 0
-    DarkTheme: 4
 CursorSwitch:
   Enabled: true
   Component:
@@ -53,17 +47,16 @@ Location:
   UseGeolocatorService: false
   SunsetOffsetMin: 0
   SunriseOffsetMin: 0
-  CustomLat: 34.052235000000003
+  CustomLat: 34.052235
   CustomLon: -118.243683
 Tunable:
   BatterySliderDefaultValue: 25
-  DisableEnergySaverOnThemeSwitch: false
+  DwmRefreshViaColorization: false
   UseLogonTask: false
   Debug: false
   Trace: false
   DebugTimerMessage: false
   ShowTrayIcon: true
-  AlwaysFullDwmRefresh: true
   UICulture: en
 GPUMonitoring:
   Enabled: false
@@ -105,10 +98,10 @@ WallpaperSwitch:
       Light: '#FFFFFF'
       Dark: '#000000'
     Monitors:
-    - Id: '\\?\DISPLAY#GSM774B#5&8bb1cae&0&UID33025#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}'
+    - Id: \\?\DISPLAY#GSM774B#5&8bb1cae&1&UID33025#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}
       LightThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
       DarkThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
-    - Id: '\\?\DISPLAY#MTT1337#1&28a6823a&0&UID256#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}'
+    - Id: \\?\DISPLAY#MTT1337#1&15ecd195&0&UID256#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}
       LightThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
       DarkThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
 Updater:
