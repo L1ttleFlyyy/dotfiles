@@ -17,9 +17,9 @@ SystemSwitch:
   Component:
     Mode: Switch
     TaskbarSwitchDelay: 1200
-    TaskbarColorSwitch: true
+    TaskbarColorSwitch: false
     TaskbarColorDuring: Dark
-    DWMPrevalenceSwitch: true
+    DWMPrevalenceSwitch: false
     DWMPrevalenceEnableTheme: Light
 TouchKeyboardSwitch:
   Enabled: false
@@ -102,6 +102,12 @@ WallpaperSwitch:
       LightThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
       DarkThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
     - Id: \\?\DISPLAY#MTT1337#1&15ecd195&0&UID256#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}
+      LightThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
+      DarkThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
+    - Id: \\?\DISPLAY#GSM774B#5&8bb1cae&2&UID33025#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}
+      LightThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
+      DarkThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
+    - Id: \\?\DISPLAY#MTT1337#1&28a6823a&7&UID256#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}
       LightThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
       DarkThemeWallpaper: C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\DesktopSpotlight\Assets\Images\image_0.jpg
 Updater:
