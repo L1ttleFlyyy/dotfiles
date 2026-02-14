@@ -1,7 +1,21 @@
 {
     "$help": "https://aka.ms/terminal-documentation",
     "$schema": "https://aka.ms/terminal-profiles-schema-preview",
-    "actions": [],
+    "actions": 
+    [
+        {
+            "command": 
+            {
+                "action": "copy",
+                "singleLine": false
+            },
+            "id": "User.copy.224984B4"
+        },
+        {
+            "command": "paste",
+            "id": "User.paste"
+        }
+    ],
     "compatibility.enableUnfocusedAcrylic": true,
     "copyFormatting": "none",
     "copyOnSelect": true,
@@ -35,6 +49,10 @@
             "keys": "alt+w"
         },
         {
+            "id": null,
+            "keys": "ctrl+shift+f"
+        },
+        {
             "id": "Terminal.PasteFromClipboard",
             "keys": "ctrl+v"
         },
@@ -57,6 +75,10 @@
         {
             "id": null,
             "keys": "ctrl+shift+t"
+        },
+        {
+            "id": "Terminal.FindText",
+            "keys": "alt+f"
         },
         {
             "id": "Terminal.SwitchToTab0",
@@ -108,6 +130,10 @@
         },
         {
             "id": null,
+            "keys": "ctrl+shift+c"
+        },
+        {
+            "id": null,
             "keys": "ctrl+alt+5"
         },
         {
@@ -125,6 +151,18 @@
         {
             "id": "Terminal.SwitchToLastTab",
             "keys": "alt+9"
+        },
+        {
+            "id": null,
+            "keys": "alt+enter"
+        },
+        {
+            "id": "User.copy.224984B4",
+            "keys": "alt+c"
+        },
+        {
+            "id": "User.paste",
+            "keys": "alt+v"
         }
     ],
     "newTabMenu": 

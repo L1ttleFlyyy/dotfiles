@@ -8,7 +8,6 @@ $Env:FZF_DEFAULT_OPTS = '--reverse --cycle --info=inline --pointer=">" --bind=ct
 $Env:FZF_ALT_C_OPTS = '--preview "tree {}"'
 
 # use PSCompletions for Tab
-Import-Module -Name Terminal-Icons
 Import-Module PSCompletions
 
 $DUSER = "D:\Users\$env:USERNAME\"
@@ -23,9 +22,9 @@ function clear {Write-Output "$([char]27)[H$([char]27)[2J" }
 function c { clear }
 
 Remove-Item Alias:ls
-function ls { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0] | Format-Wide } else { Get-ChildItem -Path . | Format-Wide } }
-function ll { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0]               } else { Get-ChildItem -Path .               } }
-function la { if ($args.Count -gt 0) { Get-ChildItem -Path $args[0] -Force        } else { Get-ChildItem -Path . -Force        } }
+function ls { eza --icons=auto     $args }
+function ll { eza --icons=auto -l  $args }
+function la { eza --icons=auto -la $args }
 
 Set-Alias -Name open -Value explorer
 
