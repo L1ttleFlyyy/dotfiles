@@ -1,0 +1,141 @@
+#!/bin/bash
+
+# Fix Tailscale routing on macOS when Work VPN conflicts with 100.64/10
+# 解决 Work VPN 与 Tailscale 的 100.64/10 路由冲突
+# Usage: ./fix-macos-routing.sh [--yes]
+
+set -e
+
+AUTO_CONFIRM=false
+TAILSCALE_BIN="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+
+# 解析参数
+if [[ "$1" == "--yes" || "$1" == "-y" ]]; then
+    AUTO_CONFIRM=true
+fi
+
+echo "=== Fixing Tailscale routing conflicts ==="
+echo ""
+
+# 检查 tailscale 命令
+if [ ! -x "$TAILSCALE_BIN" ]; then
+    # 尝试从 PATH 中查找
+    if command -v tailscale &>/dev/null; then
+        TAILSCALE_BIN="tailscale"
+    else
+        echo "✗ Error: tailscale command not found"
+        exit 1
+    fi
+fi
+
+# 获取 tailscale status 输出
+echo "Step 0: Fetching Tailscale status"
+TAILSCALE_STATUS=$("$TAILSCALE_BIN" status 2>/dev/null)
+
+if [ -z "$TAILSCALE_STATUS" ]; then
+    echo "✗ Error: Could not get Tailscale status. Is Tailscale running?"
+    exit 1
+fi
+
+# 提取本机 IP（第一行）
+LOCAL_IP=$(echo "$TAILSCALE_STATUS" | head -1 | awk '{print $1}')
+
+if [ -z "$LOCAL_IP" ]; then
+    echo "✗ Error: Could not determine local Tailscale IP"
+    exit 1
+fi
+
+echo "✓ Local Tailscale IP: $LOCAL_IP"
+
+# 提取 prefix（假设是 x.x.x.0/24）
+TAILSCALE_PREFIX=$(echo "$LOCAL_IP" | sed -E 's/\.[0-9]+$//')
+
+echo "✓ Detected Tailscale prefix: $TAILSCALE_PREFIX.0/24"
+
+# 提取所有 peer IP（排除第一行本机）
+PEER_IPS=()
+while IFS= read -r line; do
+    ip=$(echo "$line" | awk '{print $1}')
+    if [[ "$ip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [ "$ip" != "$LOCAL_IP" ]; then
+        PEER_IPS+=("$ip")
+    fi
+done < <(echo "$TAILSCALE_STATUS" | tail -n +2)
+
+echo "✓ Found ${#PEER_IPS[@]} peer(s)"
+echo ""
+
+# 自动检测 Tailscale 接口（查找有本机 IP 的接口）
+echo "Step 1: Detecting Tailscale interface"
+
+# 遍历所有 utun 接口，查找匹配的 IP
+TAILSCALE_INTERFACE=""
+
+for iface in $(ifconfig -l | tr ' ' '\n' | grep "^utun"); do
+    ip=$(ifconfig "$iface" 2>/dev/null | grep "inet ${LOCAL_IP}" | awk '{print $2}')
+    if [ -n "$ip" ]; then
+        TAILSCALE_INTERFACE="$iface"
+        break
+    fi
+done
+
+if [ -z "$TAILSCALE_INTERFACE" ]; then
+    echo "✗ Error: Could not find interface with IP ${LOCAL_IP}"
+    echo "Is Tailscale running?"
+    exit 1
+fi
+
+echo "✓ Detected Tailscale interface: $TAILSCALE_INTERFACE"
+echo ""
+
+# 显示即将执行的命令
+echo "=== Commands to be executed ==="
+echo "1. sudo route delete -net 100.64.0.0/10 -ifscope $TAILSCALE_INTERFACE"
+
+for peer_ip in "${PEER_IPS[@]}"; do
+    echo "2. sudo route add -host $peer_ip -interface $TAILSCALE_INTERFACE"
+done
+echo ""
+
+# 用户确认
+if [ "$AUTO_CONFIRM" = false ]; then
+    read -p "Proceed with these changes? [N/y]: " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo "Cancelled"
+        exit 0
+    fi
+    echo ""
+fi
+
+# 方案 A: 删除 Tailscale 自己添加的 /10 路由（避免冲突）
+echo "Step 2: Removing conflicting /10 route on $TAILSCALE_INTERFACE"
+if sudo route delete -net 100.64.0.0/10 -ifscope "$TAILSCALE_INTERFACE" 2>/dev/null; then
+    echo "✓ Removed 100.64/10 route on $TAILSCALE_INTERFACE"
+else
+    echo "⚠ Route not found or already removed"
+fi
+echo ""
+
+# 方案 B: 为所有 Headscale peer 添加 /32 路由
+echo "Step 3: Adding /32 routes for all peers"
+
+for peer_ip in "${PEER_IPS[@]}"; do
+    if sudo route add -host "$peer_ip" -interface "$TAILSCALE_INTERFACE" 2>/dev/null; then
+        echo "✓ Added route: $peer_ip -> $TAILSCALE_INTERFACE"
+    else
+        echo "⚠ Route already exists or failed: $peer_ip"
+    fi
+done
+
+echo ""
+echo "=== Verification ==="
+echo "Current 100.x routes:"
+netstat -rn | grep "^100\."
+echo ""
+
+# 测试连通性
+echo "Testing connectivity to arm-oci (100.123.123.8):"
+if ping -c 1 -W 2 100.123.123.8 &>/dev/null; then
+    echo "✓ Ping successful"
+else
+    echo "✗ Ping failed (may need to wait for Tailscale to reconnect)"
+fi
