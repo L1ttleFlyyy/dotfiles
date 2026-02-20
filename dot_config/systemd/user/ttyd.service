@@ -2,7 +2,7 @@
 Description=ttyd web terminal
 
 [Service]
-ExecStart=/home/linuxbrew/.linuxbrew/bin/ttyd -W -t enableTrzsz=true -t disableLeaveAlert=true -i 172.27.143.7 /home/linuxbrew/.linuxbrew/bin/zsh
+ExecStart=/home/linuxbrew/.linuxbrew/bin/ttyd -W -t enableTrzsz=true -t disableLeaveAlert=true -i 100.123.123.7 /home/linuxbrew/.linuxbrew/bin/zsh
 Restart=always
 RestartSec=20
 # Don't restart too aggressively

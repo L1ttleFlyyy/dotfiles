@@ -3,7 +3,7 @@ Description=Dufs File Server - Home Directory
 
 [Service]
 Type=simple
-ExecStart=/home/linuxbrew/.linuxbrew/bin/dufs %h --bind 172.27.143.7 --port 5000 --allow-all --hidden '.*'
+ExecStart=/home/linuxbrew/.linuxbrew/bin/dufs %h --bind 100.123.123.7 --port 5000 --allow-all --hidden '.*'
 Restart=always
 RestartSec=20
 # Don't restart too aggressively
