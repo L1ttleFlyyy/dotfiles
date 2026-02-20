@@ -171,9 +171,9 @@ require("lazy").setup(
                         "lua", "vim", "vimdoc", "c", "cpp",
                         "python", "perl", "json", "yaml", "toml",
                         "bash", "markdown", "markdown_inline",
-            --{ if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
+            --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
                         "verilog",
-            --{ end }--
+            --{- end }--
                     },
                     sync_install = false,
                     auto_install = false,
@@ -218,7 +218,9 @@ require("lazy").setup(
             version = "v2.*",
             dependencies = {
                 "rafamadriz/friendly-snippets",
+            --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
                 "gvekony/sv-1800-2012",
+            --{- end }--
             },
             config = function()
                 require("luasnip.loaders.from_vscode").lazy_load()
