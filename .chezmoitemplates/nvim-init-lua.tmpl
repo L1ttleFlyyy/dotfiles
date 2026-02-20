@@ -23,6 +23,18 @@ vim.opt.linebreak = true -- Wrap long lines at word boundaries
 vim.opt.showmode = false -- Don't show mode since we have lualine
 vim.opt.cmdheight = 1 -- Command line height
 
+-- Search
+vim.opt.ignorecase = true    -- Case-insensitive search by default
+vim.opt.smartcase = true     -- Case-sensitive if pattern contains uppercase
+vim.opt.inccommand = "nosplit" -- Live preview of :s substitutions
+
+-- Splits
+vim.opt.splitright = true    -- :vsp opens to the right
+vim.opt.splitbelow = true    -- :sp  opens below
+
+-- Always show signcolumn to prevent text shifting when diff/diagnostic signs appear
+vim.opt.signcolumn = "yes"
+
 -- Indentation
 vim.opt.tabstop = 8 -- Display existing tabs as 8 spaces
 vim.opt.softtabstop = 4 -- Number of spaces per Tab press
@@ -203,7 +215,17 @@ require("lazy").setup(
                     inactive_sections = {},
                     tabline = {
                         lualine_a = {{"mode", separator = {left = "\u{e0b6}"}, right_padding = 2}},
-                        lualine_b = {"branch", "diff", "diagnostics"},
+                        lualine_b = {
+                            "branch",
+                            {
+                                "diff",
+                                source = function()
+                                    local s = vim.b.minidiff_summary
+                                    return s and { added = s.add, modified = s.change, removed = s.delete }
+                                end,
+                            },
+                            "diagnostics",
+                        },
                         lualine_c = {{"buffers", show_filename_only = false, buffers_color = {active = {gui = 'bold'}}}},
                         lualine_x = {"encoding", "fileformat", "filetype"},
                         lualine_y = {"progress"},
@@ -248,6 +270,23 @@ require("lazy").setup(
                 fuzzy = {
                     implementation = "prefer_rust_with_warning",
                 },
+                -- Cmdline completion: replaces wildmenu with a popup menu
+                cmdline = {
+                    keymap = {
+                        ["<Tab>"]   = { "show", "accept" },
+                        ["<CR>"]    = { "select_and_accept", "fallback" },
+                        ["<Up>"]    = { "select_prev", "fallback" },
+                        ["<Down>"]  = { "select_next", "fallback" },
+                        ["<C-k>"]   = { "select_prev", "fallback" },
+                        ["<C-j>"]   = { "select_next", "fallback" },
+                        ["<C-e>"]   = { "cancel", "fallback" },
+                    },
+                    completion = {
+                        menu = {
+                            auto_show = false, -- Only show menu on explicit Tab press
+                        },
+                    },
+                },
             },
         },
         {
@@ -265,38 +304,79 @@ require("lazy").setup(
                 { "<leader>e",  "<cmd>Oil --float<cr>", desc = "Open file explorer (float)" },
             },
         },
-        -- Git signs in signcolumn
+        -- Smooth animations for cursor, scroll, and window resize
         {
-            "lewis6991/gitsigns.nvim",
+            "echasnovski/mini.animate",
+            event = "VeryLazy",
+            opts = {
+                cursor = { enable = false }, -- disabled, smear-cursor handles this
+            },
+        },
+        -- Smear cursor animation
+        {
+            "sphamba/smear-cursor.nvim",
+            event = "VeryLazy",
+            opts = {},
+        },
+        -- Indent scope indicator for current code block
+        {
+            "echasnovski/mini.indentscope",
+            event = { "BufReadPre", "BufNewFile" },
+            opts = {},
+        },
+        -- Show available keybindings in a popup when you pause after a prefix key
+        {
+            "folke/which-key.nvim",
+            event = "VeryLazy",
+            opts = {
+                preset = "modern",
+                delay = 1000, -- ms to wait before showing popup (default: 200)
+            },
+        },
+        -- Show current code context (function/class/etc) at the top when scrolling
+        {
+            "nvim-treesitter/nvim-treesitter-context",
             event = { "BufReadPre", "BufNewFile" },
             opts = {
-                on_attach = function(bufnr)
-                    local gs = require("gitsigns")
-                    local function map(mode, l, r, desc)
-                        vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc })
-                    end
-
-                    map("n", "]h", function()
-                        if vim.wo.diff then
-                            vim.cmd.normal({ "]c", bang = true })
-                        else
-                            gs.next_hunk()
-                        end
-                    end, "Next hunk")
-                    map("n", "[h", function()
-                        if vim.wo.diff then
-                            vim.cmd.normal({ "[c", bang = true })
-                        else
-                            gs.prev_hunk()
-                        end
-                    end, "Prev hunk")
-
-                    map("n", "<leader>hs", gs.stage_hunk,                                  "Stage hunk")
-                    map("n", "<leader>hr", gs.reset_hunk,                                  "Reset hunk")
-                    map("n", "<leader>hp", gs.preview_hunk,                                "Preview hunk")
-                    map("n", "<leader>hb", function() gs.blame_line({ full = true }) end,  "Blame line")
-                end,
+                max_lines = 3, -- Max lines of context to show
             },
+        },
+        -- Diff signs in signcolumn (git with disk fallback)
+        {
+            "echasnovski/mini.diff",
+            event = { "BufReadPre", "BufNewFile" },
+            config = function()
+                local diff = require("mini.diff")
+                diff.setup({
+                    source = {
+                        diff.gen_source.git(),
+                        diff.gen_source.save(),
+                    },
+                    view = {
+                        style = "sign",
+                        signs = { add = "▎", change = "▎", delete = "▁" },
+                    },
+                })
+
+                vim.keymap.set("n", "]h", function()
+                    if vim.wo.diff then
+                        vim.cmd.normal({ "]c", bang = true })
+                    else
+                        diff.goto_hunk("next")
+                    end
+                end, { desc = "Next hunk" })
+                vim.keymap.set("n", "[h", function()
+                    if vim.wo.diff then
+                        vim.cmd.normal({ "[c", bang = true })
+                    else
+                        diff.goto_hunk("prev")
+                    end
+                end, { desc = "Prev hunk" })
+
+                vim.keymap.set("n", "<leader>hs", function() diff.do_hunks(0, "apply") end, { desc = "Stage hunk (git)" })
+                vim.keymap.set("n", "<leader>hr", function() diff.do_hunks(0, "reset") end, { desc = "Reset hunk" })
+                vim.keymap.set("n", "<leader>hp", MiniDiff.toggle_overlay, { desc = "Preview overlay" })
+            end,
         }
     },
     {
@@ -363,6 +443,13 @@ vim.keymap.set("n", "<CR>", ":nohl<CR><CR>", {silent = true})
 -- Toggle line numbers with <Leader>n
 vim.keymap.set("n", "<Leader>n", ":set invnumber invrelativenumber<CR>", {silent = true})
 
+-- Keep visual selection after indent
+vim.keymap.set("v", "<", "<gv", { silent = true })
+vim.keymap.set("v", ">", ">gv", { silent = true })
+
+-- x/X: delete without overwriting the yank register
+vim.keymap.set({ "n", "x" }, "x", '"_x', { silent = true })
+
 -- ===========================================
 -- Additional Neovim Improvements
 -- ===========================================
@@ -371,6 +458,29 @@ vim.keymap.set("n", "<Leader>n", ":set invnumber invrelativenumber<CR>", {silent
 vim.api.nvim_create_autocmd({"BufNewFile", "BufRead"}, {
         pattern = {"*.v", "*.vh", "*.sv", "*.svp", "*.prop"},
         command = "set filetype=systemverilog"
+})
+
+-- Briefly highlight yanked text
+vim.api.nvim_create_autocmd("TextYankPost", {
+    callback = function()
+        vim.hl.on_yank()
+    end,
+})
+
+-- Restore cursor to last known position when reopening a file
+vim.api.nvim_create_autocmd("BufReadPost", {
+    callback = function()
+        local mark = vim.api.nvim_buf_get_mark(0, '"')
+        local lcount = vim.api.nvim_buf_line_count(0)
+        if mark[1] > 0 and mark[1] <= lcount then
+            pcall(vim.api.nvim_win_set_cursor, 0, mark)
+        end
+    end,
+})
+
+-- Reload file if it was changed externally
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+    command = "checktime",
 })
 
 -- propagate diff filetype
