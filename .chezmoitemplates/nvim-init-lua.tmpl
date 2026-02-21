@@ -71,7 +71,10 @@ vim.g.loaded_python3_provider = 0   -- Disable Python provider
 -- OSC52 clipboard
 -- ===========================================
 vim.g.clipboard = "osc52"
-vim.opt.clipboard = "unnamedplus"  -- Sync yank with + register
+-- clipboard sync: use <leader>y/d/p to explicitly use system clipboard (osc52)
+vim.keymap.set({ "n", "x" }, "<leader>y", '"+y', { desc = "Yank to system clipboard" })
+vim.keymap.set({ "n", "x" }, "<leader>d", '"+d', { desc = "Cut to system clipboard" })
+vim.keymap.set({ "n", "x" }, "<leader>p", '"+p', { desc = "Paste from system clipboard" })
 
 
 -- ===========================================
@@ -417,8 +420,8 @@ require("lazy").setup(
                     end
                 end, { desc = "Prev hunk" })
 
-                vim.keymap.set("n", "<leader>hs", function() diff.do_hunks(0, "apply") end, { desc = "Stage hunk (git)" })
-                vim.keymap.set("n", "<leader>hr", function() diff.do_hunks(0, "reset") end, { desc = "Reset hunk" })
+                vim.keymap.set("n", "<leader>hs", function() diff.do_hunks("cursor", "apply") end, { desc = "Stage hunk (git)" })
+                vim.keymap.set("n", "<leader>hr", function() diff.do_hunks("cursor", "reset") end, { desc = "Reset hunk" })
                 vim.keymap.set("n", "<leader>hp", MiniDiff.toggle_overlay, { desc = "Preview overlay" })
             end,
         }
@@ -582,8 +585,11 @@ vim.cmd(
   cnoreabbrev W w
   cnoreabbrev Q q
   cnoreabbrev Wq wq
+  cnoreabbrev WQ wq
   cnoreabbrev Qa qa
+  cnoreabbrev QA qa
   cnoreabbrev Wqa wqa
+  cnoreabbrev WQa wqa
   cnoreabbrev Set set
 ]]
 )
