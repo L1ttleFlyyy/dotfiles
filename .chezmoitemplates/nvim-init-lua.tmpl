@@ -334,6 +334,24 @@ require("lazy").setup(
             event = { "BufReadPre", "BufNewFile" },
             opts = {},
         },
+        -- Surround actions (sa/sd/sr)
+        {
+            "echasnovski/mini.surround",
+            event = "VeryLazy",
+            opts = {},
+        },
+        -- Extended a/i textobjects (af/if for function calls, aa/ia for arguments, etc.)
+        {
+            "echasnovski/mini.ai",
+            event = "VeryLazy",
+            opts = {},
+        },
+        -- Bracket navigation (]b/[b for buffers, ]d/[d for diagnostics, etc.)
+        {
+            "echasnovski/mini.bracketed",
+            event = "VeryLazy",
+            opts = {},
+        },
         -- Show available keybindings in a popup when you pause after a prefix key
         {
             "folke/which-key.nvim",
