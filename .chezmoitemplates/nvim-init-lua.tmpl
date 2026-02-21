@@ -464,8 +464,12 @@ require("lazy").setup(
                     end
                 end, { desc = "Prev hunk" })
 
-                vim.keymap.set("n", "<leader>hs", function() diff.do_hunks("cursor", "apply") end, { desc = "Stage hunk (git)" })
-                vim.keymap.set("n", "<leader>hr", function() diff.do_hunks("cursor", "reset") end, { desc = "Reset hunk" })
+                local function cursor_hunk(action)
+                    local l = vim.fn.line(".")
+                    diff.do_hunks(0, action, { line_start = l, line_end = l })
+                end
+                vim.keymap.set("n", "<leader>hs", function() cursor_hunk("apply") end, { desc = "Stage hunk (git)" })
+                vim.keymap.set("n", "<leader>hr", function() cursor_hunk("reset") end, { desc = "Reset hunk" })
                 vim.keymap.set("n", "<leader>hp", MiniDiff.toggle_overlay, { desc = "Preview overlay" })
             end,
         }
