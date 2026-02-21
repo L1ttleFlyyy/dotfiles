@@ -364,6 +364,13 @@ require("lazy").setup(
                 delay = 1000, -- ms to wait before showing popup (default: 200)
             },
         },
+        -- Render markdown inline (headings, bullets, code blocks, etc.)
+        {
+            "MeanderingProgrammer/render-markdown.nvim",
+            ft = { "markdown" },
+            dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+            opts = {},
+        },
         -- Show current code context (function/class/etc) at the top when scrolling
         {
             "nvim-treesitter/nvim-treesitter-context",
@@ -401,7 +408,7 @@ require("lazy").setup(
                         local path = vim.api.nvim_buf_get_name(buf_id)
                         if path == "" then return end
                         vim.system(
-                            { "p4", "print", "-q", path },
+                            { "p4", "print", "-q", path .. "#have" },
                             { text = true },
                             function(out)
                                 if out.code == 0 then

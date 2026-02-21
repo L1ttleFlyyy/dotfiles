@@ -12,7 +12,7 @@ features (Verilog/SystemVerilog tooling on RHEL, Perforce integration, etc.).
 - **Prefer mini.nvim**: Small, focused, well-written Lua modules over large
   plugin ecosystems. Currently using mini.diff, mini.animate, mini.indentscope,
   mini.surround, mini.ai, and mini.bracketed.
-- **Single file**: Everything lives in `init.lua.tmpl`. No `lua/` directory,
+- **Single file**: Everything lives in `init.lua.tmpl --> ../../.chezmoitemplates/nvim-init-lua.tmpl`. No `lua/` directory,
   no split modules. Chezmoi templates handle platform branching.
 - **No LSP**: This config intentionally has no LSP setup. Completion comes from
   blink.cmp (buffer words + snippets), not language servers.
