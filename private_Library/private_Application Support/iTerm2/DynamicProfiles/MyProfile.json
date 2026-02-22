@@ -2,8 +2,8 @@
   "Profiles" : [
     {
       "Use Separate Colors for Light and Dark Mode" : true,
-      "Rewritable" : true,
       "Name" : "MyProfile",
+      "Rewritable" : true,
       "Guid" : "4DDA1565-3FB7-4015-A75A-5A11E42F6A46"
     }
   ]

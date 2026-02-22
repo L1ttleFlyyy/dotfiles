@@ -331,7 +331,7 @@ require("lazy").setup(
             },
         },
 --{- if ne (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-        -- Smooth animations for cursor, scroll, and window resize
+        -- Smooth animations for scroll and window resize
         {
             "echasnovski/mini.animate",
             event = "VeryLazy",
@@ -369,6 +369,18 @@ require("lazy").setup(
             "echasnovski/mini.bracketed",
             event = "VeryLazy",
             opts = {},
+        },
+        -- Move lines/selections with Alt+hjkl (+ arrow key aliases)
+        {
+            "echasnovski/mini.move",
+            event = "VeryLazy",
+            opts = {},
+            keys = {
+                { "<M-Up>",    "<M-k>", mode = { "n", "x" }, remap = true },
+                { "<M-Down>",  "<M-j>", mode = { "n", "x" }, remap = true },
+                { "<M-Left>",  "<M-h>", mode = { "n", "x" }, remap = true },
+                { "<M-Right>", "<M-l>", mode = { "n", "x" }, remap = true },
+            },
         },
         -- Show available keybindings in a popup when you pause after a prefix key
         {
@@ -520,28 +532,6 @@ end
 -- Key Mappings
 -- ===========================================
 
--- Line Movement (Alt+Up/Down to move lines)
--- Normal mode
-vim.keymap.set("n", "<M-Up>", ":m .-2<CR>==", {silent = true})
-vim.keymap.set("n", "<M-Down>", ":m .+1<CR>==", {silent = true})
--- Also map the escape sequences for terminal compatibility
-vim.keymap.set("n", "<Esc>[1;9A", ":m .-2<CR>==", {silent = true})
-vim.keymap.set("n", "<Esc>[1;9B", ":m .+1<CR>==", {silent = true})
-
--- Visual mode
-vim.keymap.set("v", "<M-Up>", ":m '<-2<CR>gv=gv", {silent = true})
-vim.keymap.set("v", "<M-Down>", ":m '>+1<CR>gv=gv", {silent = true})
--- Also map the escape sequences for terminal compatibility
-vim.keymap.set("v", "<Esc>[1;9A", ":m '<-2<CR>gv=gv", {silent = true})
-vim.keymap.set("v", "<Esc>[1;9B", ":m '>+1<CR>gv=gv", {silent = true})
-
--- Insert mode
-vim.keymap.set("i", "<M-Up>", "<C-o>:m .-2<CR>", {silent = true})
-vim.keymap.set("i", "<M-Down>", "<C-o>:m .+1<CR>", {silent = true})
--- Also map the escape sequences for terminal compatibility
-vim.keymap.set("i", "<Esc>[1;9A", "<C-o>:m .-2<CR>", {silent = true})
-vim.keymap.set("i", "<Esc>[1;9B", "<C-o>:m .+1<CR>", {silent = true})
-
 -- Comment keybindings (built-in gc/gcc since nvim 0.10)
 vim.keymap.set("n", "<Leader>/", "gcc", { remap = true, desc = "Toggle comment" })
 vim.keymap.set("n", "<C-/>",     "gcc", { remap = true, desc = "Toggle comment" })
@@ -554,9 +544,13 @@ vim.keymap.set("n", "<CR>", ":nohl<CR><CR>", {silent = true})
 -- Toggle line numbers with <Leader>n
 vim.keymap.set("n", "<Leader>n", ":set invnumber invrelativenumber<CR>", {silent = true})
 
--- Keep visual selection after indent
-vim.keymap.set("v", "<", "<gv", { silent = true })
-vim.keymap.set("v", ">", ">gv", { silent = true })
+-- Keep visual selection after indent (feedkeys makes it atomic, avoids mini.animate interference)
+vim.keymap.set("x", "<", function()
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<gv", true, false, true), "nx", false)
+end, { silent = true })
+vim.keymap.set("x", ">", function()
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(">gv", true, false, true), "nx", false)
+end, { silent = true })
 
 -- x/X: delete without overwriting the yank register
 vim.keymap.set({ "n", "x" }, "x", '"_x', { silent = true })

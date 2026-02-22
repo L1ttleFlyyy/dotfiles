@@ -11,7 +11,7 @@ features (Verilog/SystemVerilog tooling on RHEL, Perforce integration, etc.).
   Custom configuration only where there is a genuine personal workflow need.
 - **Prefer mini.nvim**: Small, focused, well-written Lua modules over large
   plugin ecosystems. Currently using mini.diff, mini.animate, mini.indentscope,
-  mini.surround, mini.ai, and mini.bracketed.
+  mini.surround, mini.ai, mini.bracketed, and mini.move.
 - **Single file**: Everything lives in `init.lua.tmpl --> ../../.chezmoitemplates/nvim-init-lua.tmpl`. No `lua/` directory,
   no split modules. Chezmoi templates handle platform branching.
 - **No LSP**: This config intentionally has no LSP setup. Completion comes from
@@ -38,6 +38,7 @@ features (Verilog/SystemVerilog tooling on RHEL, Perforce integration, etc.).
 | [mini.surround](https://github.com/echasnovski/mini.surround) | Surround actions (`sa`/`sd`/`sr`) |
 | [mini.ai](https://github.com/echasnovski/mini.ai) | Extended `a`/`i` textobjects (`aa`/`ia` for arguments, `af`/`if` for function calls) |
 | [mini.bracketed](https://github.com/echasnovski/mini.bracketed) | Bracket navigation (`]b`/`[b` for buffers, `]d`/`[d` for diagnostics, etc.) |
+| [mini.move](https://github.com/echasnovski/mini.move) | Move lines/selections (`Alt+hjkl`, `Alt+arrows`) |
 | [smear-cursor.nvim](https://github.com/sphamba/smear-cursor.nvim) | Cursor animation |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | Keybinding hints popup |
 | [vim-plugin-AnsiEsc](https://github.com/powerman/vim-plugin-AnsiEsc) | ANSI escape code rendering (`:AnsiEsc`) |
@@ -76,7 +77,7 @@ Leader key: `,`
 
 | Key | Action |
 |-----|--------|
-| `<M-Up>` / `<M-Down>` | Move line(s) up/down |
+| `<M-hjkl>` or `<M-arrows>` | Move line(s) / selection (mini.move) |
 | `<leader>/` or `<C-/>` | Toggle comment |
 | `<` / `>` (visual) | Indent/dedent (keeps selection) |
 | `x` | Delete char (black hole register) |
@@ -130,3 +131,21 @@ Guarded by chezmoi template `--{- if eq (dig "id" "none" .chezmoi.osRelease) "rh
 
 - `:DiffOrig` - Compare current buffer against the on-disk version in a vertical split
 - `:AnsiEsc` - Render ANSI escape codes in current buffer
+
+## Gotchas
+
+### mini.animate breaks `<`/`>` visual indent reselection
+
+The common `>gv` / `<gv` mapping (indent then reselect) breaks when `mini.animate`
+is enabled. The scroll animation intercepts cursor movement between `>` and `gv`,
+collapsing the selection. Only reproduces with downward visual selections (cursor at
+bottom of range) where the post-indent cursor jump is large enough to trigger scroll
+animation.
+
+Fix: use `nvim_feedkeys` with `"nx"` mode to make the operation atomic:
+
+```lua
+vim.keymap.set("x", ">", function()
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(">gv", true, false, true), "nx", false)
+end, { silent = true })
+```
