@@ -410,15 +410,53 @@ require("lazy").setup(
 --{- end }--
           end,
         },
-        -- Diff signs in signcolumn (git -> save fallback)
+        -- Diff signs in signcolumn (git -> p4 -> save fallback)
         {
             "echasnovski/mini.diff",
             event = { "BufReadPre", "BufNewFile" },
             config = function()
                 local diff = require("mini.diff")
+--{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
+                -- Perforce diff source: compare buffer against depot version
+                local function gen_source_p4()
+                local function set_ref(buf_id, on_fail)
+                    local path = vim.api.nvim_buf_get_name(buf_id)
+                    if path == "" then
+                        if on_fail then on_fail() end
+                        return
+                    end
+                    vim.system(
+                        { "p4", "print", "-q", path .. "#have" },
+                        { text = true },
+                        function(out)
+                            vim.schedule(function()
+                                if not vim.api.nvim_buf_is_valid(buf_id) then return end
+                                if out.code == 0 then
+                                    diff.set_ref_text(buf_id, out.stdout)
+                                elseif on_fail then
+                                    on_fail()
+                                end
+                            end)
+                        end
+                    )
+                end
+                return {
+                    name = "p4",
+                    attach = function(buf_id)
+                        set_ref(buf_id, function() diff.fail_attach(buf_id) end)
+                    end,
+                    detach = function(buf_id)
+                        vim.api.nvim_clear_autocmds({ event = "BufWritePost", buffer = buf_id })
+                    end,
+                    }
+                end
+--{- end }--
                 diff.setup({
                     source = {
                         diff.gen_source.git(),
+--{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
+                        gen_source_p4(),
+--{- end }--
                         diff.gen_source.save(),
                     },
                 })
