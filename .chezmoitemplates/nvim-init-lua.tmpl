@@ -175,19 +175,31 @@ require("lazy").setup(
                 )
             end
         },
-        -- Treesitter        -- Treesitter for better syntax highlighting
+        -- Treesitter for better syntax highlighting
         {
             "nvim-treesitter/nvim-treesitter",
-            branch = "master", -- clason is a jerk
+            branch = "master",
             build = ":TSUpdate",
             config = function()
+--{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
+                -- Add gmlarumbe's IEEE 1800-2023 parser as "systemverilog"
+                local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
+                parser_config.systemverilog= {
+                    install_info = {
+                        url = "https://github.com/gmlarumbe/tree-sitter-systemverilog",
+                        files = { "src/parser.c" },
+                        branch = "master",
+                    },
+                    filetype = "systemverilog",
+                }
+--{- end }--
                 require("nvim-treesitter.configs").setup({
                     ensure_installed = {
                         "lua", "vim", "vimdoc", "c", "cpp",
                         "python", "perl", "json", "yaml", "toml",
                         "bash", "markdown", "markdown_inline",
 --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-                        "verilog",
+                        "systemverilog",
 --{- end }--
                     },
                     sync_install = false,
@@ -201,7 +213,7 @@ require("lazy").setup(
                     },
                 })
 --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-                vim.treesitter.language.register('verilog', 'systemverilog')
+                vim.treesitter.language.register('systemverilog', 'verilog')
 --{- end }--
             end,
         },
@@ -382,7 +394,7 @@ require("lazy").setup(
               ctx.setup({ max_lines = 3, })
 --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
               local queries = require("nvim-treesitter.query")
-              vim.treesitter.query.set("verilog", "context", [[
+              vim.treesitter.query.set("systemverilog", "context", [[
                   (module_declaration) @context
                   (always_construct) @context
                   (initial_construct) @context
@@ -390,8 +402,9 @@ require("lazy").setup(
                   (task_body_declaration) @context
                   (class_declaration) @context
                   (loop_generate_construct) @context
-                  (conditional_generate_construct) @context
+                  (if_generate_construct) @context
                   (case_statement) @context
+                  (case_inside_item) @context
                   (module_instantiation) @context
               ]])
 --{- end }--
