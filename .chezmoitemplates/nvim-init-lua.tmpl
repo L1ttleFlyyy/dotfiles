@@ -324,13 +324,13 @@ require("lazy").setup(
         {
             "stevearc/oil.nvim",
             dependencies = { "nvim-tree/nvim-web-devicons" },
-            lazy = false,
             opts = {},
             keys = {
                 { "-",          "<cmd>Oil<cr>",        desc = "Open parent directory" },
                 { "<leader>e",  "<cmd>Oil --float<cr>", desc = "Open file explorer (float)" },
             },
         },
+--{- if ne (dig "id" "none" .chezmoi.osRelease) "rhel" }--
         -- Smooth animations for cursor, scroll, and window resize
         {
             "echasnovski/mini.animate",
@@ -345,6 +345,7 @@ require("lazy").setup(
             event = "VeryLazy",
             opts = {},
         },
+--{- end }--
         -- Indent scope indicator for current code block
         {
             "echasnovski/mini.indentscope",
@@ -390,84 +391,35 @@ require("lazy").setup(
             "nvim-treesitter/nvim-treesitter-context",
             event = { "BufReadPre", "BufNewFile" },
             config = function()
-              local ctx = require("treesitter-context")
-              ctx.setup({ max_lines = 3, })
+                require("treesitter-context").setup({ max_lines = 3, })
 --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-              local queries = require("nvim-treesitter.query")
-              vim.treesitter.query.set("systemverilog", "context", [[
-                  (module_declaration) @context
-                  (always_construct) @context
-                  (initial_construct) @context
-                  (function_body_declaration) @context
-                  (task_body_declaration) @context
-                  (class_declaration) @context
-                  (loop_generate_construct) @context
-                  (if_generate_construct) @context
-                  (case_statement) @context
-                  (case_inside_item) @context
-                  (module_instantiation) @context
-              ]])
+                local queries = require("nvim-treesitter.query")
+                vim.treesitter.query.set("systemverilog", "context", [[
+                    (module_declaration) @context
+                    (always_construct) @context
+                    (initial_construct) @context
+                    (function_body_declaration) @context
+                    (task_body_declaration) @context
+                    (class_declaration) @context
+                    (loop_generate_construct) @context
+                    (if_generate_construct) @context
+                    (case_statement) @context
+                    (case_inside_item) @context
+                    (module_instantiation) @context
+                ]])
 --{- end }--
           end,
         },
-        -- Diff signs in signcolumn (git -> p4 -> save fallback)
+        -- Diff signs in signcolumn (git -> save fallback)
         {
             "echasnovski/mini.diff",
             event = { "BufReadPre", "BufNewFile" },
             config = function()
                 local diff = require("mini.diff")
---{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-                -- Perforce diff source: compare buffer against depot version
-                local function gen_source_p4()
-                    local function set_ref(buf_id)
-                        local path = vim.api.nvim_buf_get_name(buf_id)
-                        if path == "" then return end
-                        vim.system(
-                            { "p4", "print", "-q", path .. "#have" },
-                            { text = true },
-                            function(out)
-                                if out.code == 0 then
-                                    vim.schedule(function()
-                                        if vim.api.nvim_buf_is_valid(buf_id) then
-                                            diff.set_ref_text(buf_id, out.stdout)
-                                        end
-                                    end)
-                                end
-                            end
-                        )
-                    end
-                    return {
-                        name = "p4",
-                        attach = function(buf_id)
-                            local path = vim.api.nvim_buf_get_name(buf_id)
-                            if path == "" then return false end
-                            -- check if file is under perforce control
-                            local out = vim.system({ "p4", "have", path }, { text = true }):wait()
-                            if out.code ~= 0 then return false end
-                            set_ref(buf_id)
-                            vim.api.nvim_create_autocmd("BufWritePost", {
-                                buffer = buf_id,
-                                callback = function() set_ref(buf_id) end,
-                            })
-                        end,
-                        detach = function(buf_id)
-                            vim.api.nvim_clear_autocmds({ event = "BufWritePost", buffer = buf_id })
-                        end,
-                    }
-                end
---{- end }--
-
                 diff.setup({
                     source = {
                         diff.gen_source.git(),
---{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-                        gen_source_p4(),
---{- end }--
                         diff.gen_source.save(),
-                    },
-                    view = {
-                        style = "sign",
-                        signs = { add = "▎", change = "▎", delete = "▁" },
                     },
                 })
 
