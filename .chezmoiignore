@@ -19,7 +19,8 @@ bin/
 {{- end }}
 
 {{- if ne .chezmoi.os "darwin" }}
-private_Library/
+Library/
+bin/fix-macos-route
 {{- end }}
 
 {{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
