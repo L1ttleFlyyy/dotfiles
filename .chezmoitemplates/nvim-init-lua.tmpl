@@ -459,6 +459,10 @@ require("lazy").setup(
 --{- end }--
                         diff.gen_source.save(),
                     },
+                    view = {
+                        style = "sign",
+                        signs = { add = "▎", change = "▎", delete = "▁" },
+                    },
                 })
 
                 vim.keymap.set("n", "]h", function()
