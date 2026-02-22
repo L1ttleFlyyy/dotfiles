@@ -18,6 +18,10 @@ bin/
 !.config/git
 {{- end }}
 
+{{- if ne .chezmoi.os "darwin" }}
+private_Library/
+{{- end }}
+
 {{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 .config/git/config
 .claude
