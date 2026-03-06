@@ -23,7 +23,7 @@ Library/
 bin/fix-macos-route
 {{- end }}
 
-{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+{{- if or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (eq .chezmoi.username "cxcx") }}
 .config/git/config
 .claude
 {{- end }}
