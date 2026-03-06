@@ -158,6 +158,7 @@ MY_THEME_FIXED=
 {{- end }}
 source $HOME/.config/colortheme/apply-theme.sh && __apply_theme_for_rc $MY_THEME_FIXED;
 alias apply-theme="__apply_theme_all ${MY_THEME_FIXED}"
+precmd_functions+=(__apply_theme_precmd)
 
 # =============================================================
 #                      User Aliases

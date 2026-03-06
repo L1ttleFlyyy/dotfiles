@@ -588,6 +588,23 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
     command = "checktime",
 })
 
+-- Auto-refresh color theme from tmux on focus
+vim.api.nvim_create_autocmd("FocusGained", {
+    callback = function()
+        if vim.env.TMUX == nil then return end
+        local out = vim.fn.system("tmux show-environment MY_CURRENT_THEME 2>/dev/null")
+        local val = out:match("MY_CURRENT_THEME=(%w+)")
+        if val == nil then return end
+        if val == "light" and vim.o.background ~= "light" then
+            vim.o.background = "light"
+            vim.cmd.colorscheme("gruvbox")
+        elseif val == "dark" and vim.o.background ~= "dark" then
+            vim.o.background = "dark"
+            vim.cmd.colorscheme("catppuccin")
+        end
+    end,
+})
+
 -- propagate diff filetype
 local function handle_diff_propagation()
     if vim.wo.diff and vim.fn.winnr('$') == 2 then
