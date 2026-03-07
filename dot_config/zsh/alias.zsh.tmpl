@@ -1,11 +1,13 @@
 # vim: ft=zsh
 alias clear='echo -ne "\033c"'
 alias c='clear'
-alias ls='ls --color=auto'
-alias ll='ls -l'
-alias la='ls -a'
 alias du='du -h -d1'
 alias fcp='rsync --archive --human-readable --partial --progress --copy-links --keep-dirlinks --no-inc-recursive'
+
+# better ls
+command eza &> /dev/null && alias ls="eza --color=auto --icons=auto"
+alias ll='ls -l'
+alias la='ls -a'
 
 alias vim='nvim'
 alias vimdiff='nvim -d'
@@ -13,11 +15,8 @@ alias sys='systemctl'
 alias che=chezmoi
 alias cz=chezmoi
 alias czcd="cd $(chezmoi source-path)"
+
 {{- if eq .chezmoi.os "darwin" }}
-
-# better ls
-command eza &> /dev/null && alias ls="eza --color=auto --icons=auto"
-
 # Tailscale cli
 [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]] \
     && alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
