@@ -508,7 +508,7 @@ require("lazy").setup(
 )
 
 -- ===========================================
--- colorscheme: $MY_CURRENT_THEME for instant startup, OSC 11 for live sync
+-- colorscheme: statefile for instant startup, OSC 11 for live sync
 -- ===========================================
 local function set_theme(bg)
     if bg == "light" then
@@ -520,8 +520,11 @@ local function set_theme(bg)
     end
 end
 
--- Instant startup: env var from shell, no blink
-set_theme(os.getenv("MY_CURRENT_THEME"))
+-- Instant startup: read statefile, fall back to dark
+local _sf = vim.fn.expand("~/.config/colortheme/theme")
+vim.fn.mkdir(vim.fn.fnamemodify(_sf, ":h"), "p")
+local _ok, _lines = pcall(vim.fn.readfile, _sf)
+set_theme((_ok and _lines[1]) or "dark")
 
 -- Parse OSC 11 response from terminal and apply
 vim.api.nvim_create_autocmd("TermResponse", {

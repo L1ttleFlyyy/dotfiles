@@ -155,32 +155,12 @@ zstyle ':fzf-tab:*' popup-min-size 120 10
 
 source $HOME/.config/colortheme/apply-theme.sh
 
-# precmd: re-read statefile + OSC 11 probe (mtime-gated)
-zmodload -F zsh/stat b:zstat 2>/dev/null
-__theme_precmd() {
-    local sf="$HOME/.config/colortheme/theme"
-
-    # OSC 11 probe, skip if statefile was touched < 10s ago
-    local mtime
-    mtime=$(zstat +mtime "$sf" 2>/dev/null) || mtime=0
-    if (( EPOCHSECONDS - mtime > 10 )); then
-        local detected
-        detected=$(bash "$HOME/.config/colortheme/detect-terminal-theme.sh" 2>/dev/null) || true
-        echo "${detected:-$MY_CURRENT_THEME}" > "$sf"
-    fi
-
-    export MY_CURRENT_THEME=$(cat "$sf" 2>/dev/null)
-}
-autoload -Uz add-zsh-hook
 {{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 if [[ -n "$SSH_CLIENT" ]]; then
-    add-zsh-hook precmd __theme_precmd
     __apply_theme; alias apply-theme="__apply_theme"
-else
-    __apply_theme_local dark; alias apply-theme="__apply_theme_local"
 fi
+# RHEL VNC: nvim handles theme via OSC 11 — nothing to do
 {{- else }}
-add-zsh-hook precmd __theme_precmd
 __apply_theme; alias apply-theme="__apply_theme"
 {{- end }}
 

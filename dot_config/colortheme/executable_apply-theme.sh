@@ -1,34 +1,20 @@
 #!/usr/bin/env bash
 
-# Core: resolve + apply theme
-# $1 = statefile path (empty = env-var-only mode)
-# $2 = action (light|dark|toggle|empty for detect)
-__apply_theme_core() {
-    local sf="$1" action="${2:-}"
-    local cur
+# Detect/set terminal theme → write statefile
+# Usage: __apply_theme [light|dark|toggle]   (no args = auto-detect)
+__apply_theme() {
+    local sf="$HOME/.config/colortheme/theme"
+    local action="${1:-}"
+    local cur theme
 
-    if [ -n "$sf" ]; then
-        cur=$(cat "$sf" 2>/dev/null) || cur="dark"
-    else
-        cur="${MY_CURRENT_THEME:-dark}"
-    fi
+    cur=$(cat "$sf" 2>/dev/null) || cur="dark"
 
     case "$action" in
-        light|dark) MY_CURRENT_THEME="$action" ;;
-        toggle)
-            if [ "$cur" = "light" ]; then MY_CURRENT_THEME="dark"; else MY_CURRENT_THEME="light"; fi
-            ;;
-        *)
-            local detected
-            detected=$(bash "$HOME/.config/colortheme/detect-terminal-theme.sh" 2>/dev/null) || true
-            MY_CURRENT_THEME="${detected:-$cur}"
-            ;;
+        light|dark) theme="$action" ;;
+        toggle)     [ "$cur" = "light" ] && theme="dark" || theme="light" ;;
+        *)          theme=$(bash "$HOME/.config/colortheme/detect-terminal-theme.sh" 2>/dev/null) || true
+                    theme="${theme:-$cur}" ;;
     esac
 
-    export MY_CURRENT_THEME
-
-    [ -n "$sf" ] && echo "$MY_CURRENT_THEME" > "$sf"
+    echo "$theme" > "$sf"
 }
-
-__apply_theme()       { __apply_theme_core "$HOME/.config/colortheme/theme" "$@"; }
-__apply_theme_local() { __apply_theme_core "" "$@"; }

@@ -12,10 +12,14 @@ Import-Module PSCompletions
 
 $DUSER = "D:\Users\$env:USERNAME\"
 $Env:EDITOR = "nvim"
-$Env:MY_CURRENT_THEME = "dark"
-if ( (Get-WindowsAppsTheme) -eq "light") { 
-    $Env:MY_CURRENT_THEME = "light"
+# Theme: read statefile, detect + write if missing
+$themeFile = "$env:USERPROFILE\.config\colortheme\theme"
+if (-not (Test-Path $themeFile)) {
+    New-Item -ItemType Directory -Path (Split-Path $themeFile) -Force | Out-Null
+    $detected = if ((Get-WindowsAppsTheme) -eq "light") { "light" } else { "dark" }
+    Set-Content -Path $themeFile -Value $detected -NoNewline
 }
+$_theme = (Get-Content $themeFile).Trim()
 
 Remove-Item Alias:clear
 function clear {Write-Output "$([char]27)[H$([char]27)[2J" }
@@ -46,10 +50,7 @@ if (Get-Command chezmoi 2> $null) {
 if (Get-Command oh-my-posh 2> $null) {
     $omp_theme_dark  = "$env:posh_themes_path/di4am0nd.omp.json"
     $omp_theme_light = "$env:posh_themes_path/negligible.omp.json"
-    $omp_theme = $omp_theme_dark;
-    if ( $Env:MY_CURRENT_THEME -eq "light" ) {
-        $omp_theme = $omp_theme_light
-    }
+    $omp_theme = if ($_theme -eq "light") { $omp_theme_light } else { $omp_theme_dark }
     oh-my-posh init pwsh --config $omp_theme | invoke-expression
 }
 

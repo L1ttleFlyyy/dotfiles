@@ -112,12 +112,12 @@ Default `y`/`d`/`p` operate on vim's unnamed register only (no system clipboard 
 
 ## Colorscheme
 
-Automatic selection based on `MY_CURRENT_THEME` environment variable:
+Automatic selection based on `~/.config/colortheme/theme` statefile:
 - `light` -> gruvbox (light background)
 - anything else -> catppuccin macchiato (dark background)
 
-On RHEL over SSH, light theme requires `SSH_CLIENT` to be set (to distinguish
-local vs remote terminal capabilities).
+nvim reads the statefile at startup and maintains it via OSC 11 detection.
+See `dot_config/colortheme/README.md` for the full architecture.
 
 ## Platform-Specific Features (RHEL)
 
