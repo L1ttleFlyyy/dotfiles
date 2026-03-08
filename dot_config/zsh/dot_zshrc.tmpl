@@ -138,6 +138,8 @@ source <(fzf --zsh)
 
 # fzf-tab setup
 setopt globdots
+source "${ZDOTDIR}/ls_colors.zsh"
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':fzf-tab:complete:cd:*'             fzf-preview                       'eza --tree --icons=auto --color=always -L 2 $realpath'
 zstyle ':fzf-tab:complete:*:directories'    fzf-preview                       'eza --tree --icons=auto --color=always -L 2 $realpath'
 zstyle ':fzf-tab:complete:*:*files'         fzf-preview '[[ -d $realpath ]] && eza --tree --icons=auto --color=always -L 2 $realpath'
