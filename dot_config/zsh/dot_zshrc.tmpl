@@ -151,14 +151,32 @@ zstyle ':fzf-tab:*' popup-min-size 120 10
 #                       Color theme
 # =============================================================
 
-# apply-theme quick-cmd
-MY_THEME_FIXED=
+source $HOME/.config/colortheme/apply-theme.sh
+
+# precmd: re-read statefile, update LS_COLORS only on change
+__theme_precmd() {
+    local new_theme
+    new_theme=$(cat "$HOME/.config/colortheme/theme" 2>/dev/null) || new_theme="dark"
+    if [[ "$new_theme" != "${MY_CURRENT_THEME:-}" ]]; then
+        export MY_CURRENT_THEME="$new_theme"
+        __apply_theme_ls_colors
+    fi
+}
+autoload -Uz add-zsh-hook
 {{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
-[[ -z "$SSH_CLIENT" ]] && MY_THEME_FIXED="dark"
+if [[ -n "$SSH_CLIENT" ]]; then
+    __apply_theme
+    alias apply-theme="__apply_theme"
+    add-zsh-hook precmd __theme_precmd
+else
+    __apply_theme_local dark
+    alias apply-theme="__apply_theme_local"
+fi
+{{- else }}
+__apply_theme
+alias apply-theme="__apply_theme"
+add-zsh-hook precmd __theme_precmd
 {{- end }}
-source $HOME/.config/colortheme/apply-theme.sh && __apply_theme_for_rc $MY_THEME_FIXED;
-alias apply-theme="__apply_theme_all ${MY_THEME_FIXED}"
-precmd_functions+=(__apply_theme_precmd)
 
 # =============================================================
 #                      User Aliases
