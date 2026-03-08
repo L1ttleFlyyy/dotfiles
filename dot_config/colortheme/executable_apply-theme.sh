@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
 
-__apply_theme_ls_colors() {
-    if command -v vivid &> /dev/null; then
-        if [ "$MY_CURRENT_THEME" = "light" ]; then
-            export LS_COLORS=$(vivid generate gruvbox-light)
-        else
-            export LS_COLORS=$(vivid generate tokyonight-night)
-        fi
-    fi
-}
-
 # Core: resolve + apply theme
 # $1 = statefile path (empty = env-var-only mode)
 # $2 = action (light|dark|toggle|empty for detect)
@@ -35,12 +25,10 @@ __apply_theme_core() {
             ;;
     esac
 
-    [[ "$MY_CURRENT_THEME" =~ ^(light|dark)$ ]] || MY_CURRENT_THEME="dark"
     export MY_CURRENT_THEME
 
     [ -n "$sf" ] && echo "$MY_CURRENT_THEME" > "$sf"
 
-    __apply_theme_ls_colors
     [ -n "$action" ] && echo "Theme set to $MY_CURRENT_THEME"
 }
 

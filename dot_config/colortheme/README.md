@@ -26,15 +26,13 @@ Sources into zsh. Provides three functions:
 - No args = pull mode: runs `detect-terminal-theme.sh`, applies result
 - `light`/`dark` = explicit set
 - `toggle` = flip current value
-- `__apply_theme_ls_colors()` sets `LS_COLORS` via `vivid`
 
 ### zsh precmd (`__theme_precmd`)
 Registered only in statefile mode (Mac, RHEL SSH). Two jobs:
 
 1. **OSC 11 probe** (if statefile mtime > 10s): detect terminal background,
    write result to statefile. Always writes (bumps mtime even if unchanged).
-2. **Statefile read**: pick up changes from any writer (self, nvim, other shells).
-   Updates `$MY_CURRENT_THEME` and `LS_COLORS` if changed.
+2. **Statefile read**: exports `$MY_CURRENT_THEME` from statefile every prompt.
 
 ### nvim (`TermResponse` autocmd)
 Parses OSC 11 responses from the terminal. On theme change:

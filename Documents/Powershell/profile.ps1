@@ -5,7 +5,7 @@ Set-PsFzfOption -PSReadlineChordProvider 'Ctrl+t' -PSReadlineChordReverseHistory
 $Env:FZF_DEFAULT_OPTS = '--reverse --cycle --info=inline --pointer=">" --bind=ctrl-space:accept'
 # Set-PSReadLineKeyHandler -Key Tab -ScriptBlock { Invoke-FzfTabCompletion }
 # $Env:FZF_CTRL_T_OPTS = '--preview "bat --color=always {}"'
-$Env:FZF_ALT_C_OPTS = '--preview "tree {}"'
+$Env:FZF_ALT_C_OPTS = '--preview "eza --tree --icons=auto -L 2 {}"'
 
 # use PSCompletions for Tab
 Import-Module PSCompletions
@@ -25,6 +25,7 @@ Remove-Item Alias:ls
 function ls { eza --icons=auto     $args }
 function ll { eza --icons=auto -l  $args }
 function la { eza --icons=auto -la $args }
+function tree { eza --tree --icons=auto $args }
 
 Set-Alias -Name open -Value explorer
 

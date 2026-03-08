@@ -5,7 +5,9 @@ alias du='du -h -d1'
 alias fcp='rsync --archive --human-readable --partial --progress --copy-links --keep-dirlinks --no-inc-recursive'
 
 # better ls
-command eza &> /dev/null && alias ls="eza --color=auto --icons=auto"
+alias ls="eza --icons=auto"
+alias tree="eza --tree --icons=auto"
+alias tre="tree -L 2"
 alias ll='ls -l'
 alias la='ls -a'
 
