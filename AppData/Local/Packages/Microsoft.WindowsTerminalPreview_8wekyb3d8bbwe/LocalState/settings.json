@@ -1,10 +1,10 @@
 {
     "$help": "https://aka.ms/terminal-documentation",
     "$schema": "https://aka.ms/terminal-profiles-schema-preview",
-    "actions": 
+    "actions":
     [
         {
-            "command": 
+            "command":
             {
                 "action": "copy",
                 "singleLine": false
@@ -20,13 +20,13 @@
     "copyFormatting": "none",
     "copyOnSelect": true,
     "defaultProfile": "{574e775e-4f2a-5b96-ac1e-a2962a402336}",
-    "disabledProfileSources": 
+    "disabledProfileSources":
     [
         "Windows.Terminal.Azure",
         "Windows.Terminal.SSH",
         "Windows.Terminal.VisualStudio"
     ],
-    "keybindings": 
+    "keybindings":
     [
         {
             "id": "Terminal.CopyToClipboard",
@@ -165,7 +165,7 @@
             "keys": "alt+v"
         }
     ],
-    "newTabMenu": 
+    "newTabMenu":
     [
         {
             "icon": null,
@@ -185,7 +185,7 @@
         },
         {
             "allowEmpty": false,
-            "entries": 
+            "entries":
             [
                 {
                     "commandline": null,
@@ -200,22 +200,22 @@
             "type": "folder"
         }
     ],
-    "profiles": 
+    "profiles":
     {
-        "defaults": 
+        "defaults":
         {
-            "colorScheme": 
+            "colorScheme":
             {
                 "dark": "Catppuccin Macchiato",
                 "light": "Gruvbox Light"
             },
-            "font": 
+            "font":
             {
                 "face": "SauceCodePro Nerd Font",
                 "size": 12
             }
         },
-        "list": 
+        "list":
         [
             {
                 "commandline": "\"C:\\Users\\l1ttleflyyy\\AppData\\Local\\Microsoft\\WindowsApps\\pwsh.EXE\"",
@@ -247,7 +247,7 @@
             }
         ]
     },
-    "schemes": 
+    "schemes":
     [
         {
             "background": "#303446",
@@ -374,19 +374,19 @@
     [
         {
             "name": "Catppuccin Frappe",
-            "tab": 
+            "tab":
             {
                 "background": "#303446FF",
                 "iconStyle": "default",
                 "showCloseButton": "always",
                 "unfocusedBackground": null
             },
-            "tabRow": 
+            "tabRow":
             {
                 "background": "#292C3CFF",
                 "unfocusedBackground": "#232634FF"
             },
-            "window": 
+            "window":
             {
                 "applicationTheme": "dark",
                 "experimental.rainbowFrame": false,
@@ -397,19 +397,19 @@
         },
         {
             "name": "Catppuccin Latte",
-            "tab": 
+            "tab":
             {
                 "background": "#EFF1F5FF",
                 "iconStyle": "default",
                 "showCloseButton": "always",
                 "unfocusedBackground": null
             },
-            "tabRow": 
+            "tabRow":
             {
                 "background": "#E6E9EFFF",
                 "unfocusedBackground": "#DCE0E8FF"
             },
-            "window": 
+            "window":
             {
                 "applicationTheme": "light",
                 "experimental.rainbowFrame": false,
@@ -420,19 +420,19 @@
         },
         {
             "name": "Catppuccin Macchiato",
-            "tab": 
+            "tab":
             {
                 "background": "#24273AFF",
                 "iconStyle": "default",
                 "showCloseButton": "always",
                 "unfocusedBackground": null
             },
-            "tabRow": 
+            "tabRow":
             {
                 "background": "#1E2030FF",
                 "unfocusedBackground": "#181926FF"
             },
-            "window": 
+            "window":
             {
                 "applicationTheme": "dark",
                 "experimental.rainbowFrame": false,
@@ -443,19 +443,19 @@
         },
         {
             "name": "Catppuccin Mocha",
-            "tab": 
+            "tab":
             {
                 "background": "#1E1E2EFF",
                 "iconStyle": "default",
                 "showCloseButton": "always",
                 "unfocusedBackground": null
             },
-            "tabRow": 
+            "tabRow":
             {
                 "background": "#181825FF",
                 "unfocusedBackground": "#11111BFF"
             },
-            "window": 
+            "window":
             {
                 "applicationTheme": "dark",
                 "experimental.rainbowFrame": false,
@@ -466,19 +466,19 @@
         },
         {
             "name": "Gruvbox Light",
-            "tab": 
+            "tab":
             {
                 "background": "#FBF1C7FF",
                 "iconStyle": "default",
                 "showCloseButton": "always",
                 "unfocusedBackground": null
             },
-            "tabRow": 
+            "tabRow":
             {
                 "background": "#F2E5BCFF",
                 "unfocusedBackground": "#F9F5D7FF"
             },
-            "window": 
+            "window":
             {
                 "applicationTheme": "light",
                 "experimental.rainbowFrame": false,

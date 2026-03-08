@@ -28,8 +28,6 @@ __apply_theme_core() {
     export MY_CURRENT_THEME
 
     [ -n "$sf" ] && echo "$MY_CURRENT_THEME" > "$sf"
-
-    [ -n "$action" ] && echo "Theme set to $MY_CURRENT_THEME"
 }
 
 __apply_theme()       { __apply_theme_core "$HOME/.config/colortheme/theme" "$@"; }

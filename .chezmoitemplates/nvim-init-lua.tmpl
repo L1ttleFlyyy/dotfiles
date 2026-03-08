@@ -183,6 +183,7 @@ require("lazy").setup(
             lazy = false,
             build = ":TSUpdate",
             config = function()
+                vim.env.CC = "gcc"
 --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
                 -- Register gmlarumbe's IEEE 1800-2023 parser as "systemverilog"
                 vim.api.nvim_create_autocmd('User', { pattern = 'TSUpdate',
@@ -535,10 +536,10 @@ vim.api.nvim_create_autocmd("TermResponse", {
             set_theme(bg)
 --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
             if os.getenv("SSH_CLIENT") then
---{- end }--
                 vim.fn.writefile({bg}, vim.fn.expand("~/.config/colortheme/theme"))
---{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
             end
+--{- else }--
+            vim.fn.writefile({bg}, vim.fn.expand("~/.config/colortheme/theme"))
 --{- end }--
         end)
     end,
