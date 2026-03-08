@@ -16,6 +16,7 @@ features (Verilog/SystemVerilog tooling on RHEL, Perforce integration, etc.).
   no split modules. Chezmoi templates handle platform branching.
 - **No LSP**: This config intentionally has no LSP setup. Completion comes from
   blink.cmp (buffer words + snippets), not language servers.
+- **Requires**: Neovim 0.11+, `tree-sitter-cli` 0.26.1+.
 
 ## Plugin List
 
@@ -26,7 +27,7 @@ features (Verilog/SystemVerilog tooling on RHEL, Perforce integration, etc.).
 | [fzf-lua](https://github.com/ibhagwan/fzf-lua) | Fuzzy finder (files, grep, buffers, commands) |
 | [gruvbox.nvim](https://github.com/ellisonleao/gruvbox.nvim) | Light theme |
 | [catppuccin](https://github.com/catppuccin/nvim) | Dark theme (macchiato) |
-| [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | Syntax highlighting and indentation |
+| [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | Syntax highlighting and indentation (`main` branch rewrite) |
 | [nvim-treesitter-context](https://github.com/nvim-treesitter/nvim-treesitter-context) | Sticky context header (function/class name) |
 | [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim) | Status line (tabline-only layout with buffers, branch, diff) |
 | [LuaSnip](https://github.com/L3MON4D3/LuaSnip) | Snippet engine + friendly-snippets |
