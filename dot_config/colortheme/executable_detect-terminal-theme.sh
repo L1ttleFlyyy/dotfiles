@@ -29,7 +29,7 @@ printf '\e]11;?\a' > /dev/tty
 # Read response char-by-char (handles both BEL and ST terminators)
 response=""
 prev=""
-while IFS= read -rn1 -t 2 char < /dev/tty; do
+while IFS= read -rn1 -t 1 char < /dev/tty; do
     if [[ "$char" == $'\a' ]]; then break; fi
     if [[ "$char" == '\' && "$prev" == $'\e' ]]; then
         response="${response%?}"

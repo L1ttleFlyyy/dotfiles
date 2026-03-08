@@ -534,8 +534,16 @@ vim.api.nvim_create_autocmd("TermResponse", {
         local lum = 0.299 * (tonumber(r, 16) / 65535)
                   + 0.587 * (tonumber(g, 16) / 65535)
                   + 0.114 * (tonumber(b, 16) / 65535)
+        local bg = lum >= 0.5 and "light" or "dark"
         vim.schedule(function()
-            set_theme(lum >= 0.5 and "light" or "dark")
+            set_theme(bg)
+--{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
+            if os.getenv("SSH_CLIENT") then
+--{- end }--
+                vim.fn.writefile({bg}, vim.fn.expand("~/.config/colortheme/theme"))
+--{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
+            end
+--{- end }--
         end)
     end,
 })

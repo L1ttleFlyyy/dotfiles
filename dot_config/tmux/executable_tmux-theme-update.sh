@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Called by tmux client-focus-in hook.
 # Polls state file and reloads tmux only if theme changed.
+# Invoked as a silent status-right segment every status-interval.
 
 theme=$(cat ~/.config/colortheme/theme 2>/dev/null) || theme="dark"
 current=$(tmux show-env -g MY_CURRENT_THEME 2>/dev/null | cut -d= -f2) || current=""

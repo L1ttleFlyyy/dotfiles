@@ -153,10 +153,21 @@ zstyle ':fzf-tab:*' popup-min-size 120 10
 
 source $HOME/.config/colortheme/apply-theme.sh
 
-# precmd: re-read statefile, update LS_COLORS only on change
+# precmd: re-read statefile + OSC 11 probe (mtime-gated)
+zmodload -F zsh/stat b:zstat 2>/dev/null
 __theme_precmd() {
+    # OSC 11 probe, skip if statefile was touched < 10s ago
+    local sf="$HOME/.config/colortheme/theme"
+    local mtime
+    mtime=$(zstat +mtime "$sf" 2>/dev/null) || mtime=0
+    if (( EPOCHSECONDS - mtime > 10 )); then
+        local detected
+        detected=$(bash "$HOME/.config/colortheme/detect-terminal-theme.sh" 2>/dev/null) || true
+        echo "${detected:-$MY_CURRENT_THEME}" > "$sf"
+    fi
+
     local new_theme
-    new_theme=$(cat "$HOME/.config/colortheme/theme" 2>/dev/null) || new_theme="dark"
+    new_theme=$(cat "$sf" 2>/dev/null) || new_theme="dark"
     if [[ "$new_theme" != "${MY_CURRENT_THEME:-}" ]]; then
         export MY_CURRENT_THEME="$new_theme"
         __apply_theme_ls_colors
