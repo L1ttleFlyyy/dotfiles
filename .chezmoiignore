@@ -1,6 +1,7 @@
 # .chezmoiignore
 LICENSE
 README.md
+.config/colortheme/README.md
 
 {{- if ne .chezmoi.os "windows" }}
 .chezmoiscripts/**
