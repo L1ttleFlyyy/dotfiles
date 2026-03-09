@@ -328,22 +328,12 @@ require("lazy").setup(
                 { "<leader>e",  "<cmd>Oil --float<cr>", desc = "Open file explorer (float)" },
             },
         },
---{- if ne (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-        -- Smooth animations for scroll and window resize
-        {
-            "echasnovski/mini.animate",
-            event = "VeryLazy",
-            opts = {
-                cursor = { enable = false }, -- disabled, smear-cursor handles this
-            },
-        },
         -- Smear cursor animation
         {
             "sphamba/smear-cursor.nvim",
             event = "VeryLazy",
             opts = {},
         },
---{- end }--
         -- Indent scope indicator for current code block
         {
             "echasnovski/mini.indentscope",

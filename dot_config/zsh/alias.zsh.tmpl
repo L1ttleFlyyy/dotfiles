@@ -1,16 +1,19 @@
 # vim: ft=zsh
 alias clear='echo -ne "\033c"'
 alias c='clear'
-alias du='du -h -d1'
+alias df='df --human-readable'
+alias du='dust --limit-filesystem'
 alias fcp='rsync --archive --human-readable --partial --progress --copy-links --keep-dirlinks --no-inc-recursive'
 
 # better ls
-alias ls="eza --icons=auto"
+alias l="eza --icons=auto"
+alias ll='l -l'
+alias la='l -a'
+alias lt='l -l -s modified'
 alias tree="eza --tree --icons=auto"
 alias tre="tree -L 2"
-alias ll='ls -l'
-alias la='ls -a'
 
+alias v='nvim'
 alias vim='nvim'
 alias vimdiff='nvim -d'
 alias sys='systemctl'

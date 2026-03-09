@@ -4,19 +4,24 @@
 
 input=$(cat)
 
-
 # ── helpers ────────────────────────────────────────────────────────────────────
 jq_val() { printf '%s' "$input" | jq -r "$1"; }
 
-# ANSI-16 color helpers (work with terminal's dim palette)
+# ANSI-16 colors – no dim/gray, visible in both light & dark mode
 c_reset='\e[0m'
 c_green='\e[32m'
 c_yellow='\e[33m'
 c_red='\e[31m'
 c_cyan='\e[36m'
 c_blue='\e[34m'
-c_dim='\e[2m'
+c_magenta='\e[35m'
 c_bold='\e[1m'
+
+# Nerd Font icons via unicode escapes (avoids encoding issues in editors/tools)
+icon_brain=$'\U000f16a4'      # nf-md-robot         model
+icon_git=$'\ue702'            # nf-dev-git_branch   git branch
+icon_folder=$'\uf07c'         # nf-fa-folder_open   directory
+icon_worktree=$'\uf126'       # nf-fa-code_fork     worktree
 
 # ── model ──────────────────────────────────────────────────────────────────────
 model=$(jq_val '.model.display_name // .model.id // "Claude"')
@@ -65,23 +70,66 @@ bar=$(build_bar "$pct_int")
 if [[ -n "$used_pct" && -n "$total" && "$total" != "0" ]]; then
     used_h=$(human_tokens "$used_tokens")
     total_h=$(human_tokens "$total")
-    ctx_part="${bar} ${c_dim}${used_h}/${total_h}${c_reset}"
+    ctx_part="${bar} ${c_cyan}${used_h}/${total_h}${c_reset}"
 else
     ctx_part="${bar}"
 fi
 
-# ── git status ─────────────────────────────────────────────────────────────────
+# ── git status (p10k style) ───────────────────────────────────────────────────
 cwd=$(jq_val '.workspace.current_dir // .cwd // "."')
 
 git_part=""
 if branch=$(GIT_DIR="${cwd}/.git" GIT_OPTIONAL_LOCKS=0 git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null \
             || GIT_OPTIONAL_LOCKS=0 git -C "$cwd" rev-parse --short HEAD 2>/dev/null); then
-    # check dirty (untracked+modified), fast
-    if GIT_OPTIONAL_LOCKS=0 git -C "$cwd" status --porcelain 2>/dev/null | grep -q .; then
-        git_part="${c_yellow} ${branch}*${c_reset}"
+
+    git_info="${icon_git} ${branch}"
+    git_suffix=""
+
+    # ahead/behind remote
+    ahead=$(GIT_OPTIONAL_LOCKS=0 git -C "$cwd" rev-list --count '@{upstream}..HEAD' 2>/dev/null) || ahead=0
+    behind=$(GIT_OPTIONAL_LOCKS=0 git -C "$cwd" rev-list --count 'HEAD..@{upstream}' 2>/dev/null) || behind=0
+    [[ "$behind" -gt 0 ]] && git_suffix+=" ${c_cyan}\xe2\x87\xa3${behind}${c_reset}"
+    [[ "$ahead"  -gt 0 ]] && git_suffix+=" ${c_cyan}\xe2\x87\xa1${ahead}${c_reset}"
+
+    # stashes
+    stashes=$(GIT_OPTIONAL_LOCKS=0 git -C "$cwd" stash list 2>/dev/null | wc -l) || stashes=0
+    stashes=$(( stashes + 0 ))  # trim whitespace
+    [[ "$stashes" -gt 0 ]] && git_suffix+=" ${c_cyan}*${stashes}${c_reset}"
+
+    # staged (+), unstaged (!), untracked (?), conflicted (~)
+    staged=0 unstaged=0 untracked=0 conflicted=0
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+        x="${line:0:1}" y="${line:1:1}"
+        # conflicts: UU, AA, DD, AU, UA, DU, UD
+        if [[ "$x$y" == "UU" || "$x$y" == "AA" || "$x$y" == "DD" || \
+              "$x" == "U" || "$y" == "U" ]]; then
+            (( conflicted++ ))
+        else
+            [[ "$x" == "?" ]]                              && (( untracked++ ))
+            [[ "$x" != "?" && "$x" != " " && "$x" != "!" ]] && (( staged++ ))
+            [[ "$y" != " " && "$y" != "?" && "$y" != "!" ]] && (( unstaged++ ))
+        fi
+    done < <(GIT_OPTIONAL_LOCKS=0 git -C "$cwd" status --porcelain 2>/dev/null)
+
+    [[ $conflicted -gt 0 ]] && git_suffix+=" ${c_red}~${conflicted}${c_reset}"
+    [[ $staged     -gt 0 ]] && git_suffix+=" ${c_green}+${staged}${c_reset}"
+    [[ $unstaged   -gt 0 ]] && git_suffix+=" ${c_yellow}!${unstaged}${c_reset}"
+    [[ $untracked  -gt 0 ]] && git_suffix+=" ${c_blue}?${untracked}${c_reset}"
+
+    # color branch name: clean=green, dirty=yellow
+    if [[ $staged -gt 0 || $unstaged -gt 0 || $untracked -gt 0 || $conflicted -gt 0 ]]; then
+        git_part="${c_yellow}${git_info}${c_reset}${git_suffix}"
     else
-        git_part="${c_green} ${branch}${c_reset}"
+        git_part="${c_green}${git_info}${c_reset}${git_suffix}"
     fi
+fi
+
+# ── worktree ───────────────────────────────────────────────────────────────────
+wt_name=$(jq_val '.worktree.name // empty')
+wt_part=""
+if [[ -n "$wt_name" ]]; then
+    wt_part="${c_magenta}${icon_worktree} ${wt_name}${c_reset}"
 fi
 
 # ── shortened pwd ──────────────────────────────────────────────────────────────
@@ -114,42 +162,35 @@ short_pwd() {
 
     local display
     if [[ -n "$anchor_root" ]]; then
-        # show from anchor_root's parent basename down
         local parent="${anchor_root%/*}"
         if [[ -z "$parent" ]]; then parent="/"; fi
         local rel="${dir#"$anchor_root"}"
         local root_name="${anchor_root##*/}"
-        if [[ "$parent" == "$home" || "$parent" == "/" ]]; then
-            display="${root_name}${rel}"
-        else
-            display="…/${root_name}${rel}"
-        fi
+        display="${root_name}${rel}"
     else
-        # no anchor: tilde-collapse and show last 2 segments
         display="${dir/#$home/\~}"
-        # shorten to last 2 path parts if deep
         local IFS='/'
         read -ra parts <<< "${display#\~/}"
         local n=${#parts[@]}
         if [[ $n -gt 2 ]]; then
             display="~/${parts[$((n-2))]}/${parts[$((n-1))]}"
-            [[ "${display:0:1}" != "~" ]] && display="…/${parts[$((n-2))]}/${parts[$((n-1))]}"
+            [[ "${display:0:1}" != "~" ]] && display="${parts[$((n-2))]}/${parts[$((n-1))]}"
         fi
     fi
 
-    # re-apply ~ if starts with home
     display="${display/#$home/\~}"
     printf '%s' "$display"
 }
 
-pwd_part="${c_blue}$(short_pwd "$cwd")${c_reset}"
+pwd_part="${c_blue}${icon_folder} $(short_pwd "$cwd")${c_reset}"
 
 # ── assemble ───────────────────────────────────────────────────────────────────
-sep="${c_dim} │ ${c_reset}"
+sep="${c_cyan} | ${c_reset}"
 
-out="${c_bold}${model}${c_reset}"
+out="${c_bold}${c_magenta}${icon_brain} ${model}${c_reset}"
 out+="${sep}${ctx_part}"
-[[ -n "$git_part" ]] && out+="${sep}${git_part}"
+[[ -n "$git_part" ]]   && out+="${sep}${git_part}"
+[[ -n "$wt_part" ]]    && out+="${sep}${wt_part}"
 out+="${sep}${pwd_part}"
 
 printf "%b\n" "$out"
