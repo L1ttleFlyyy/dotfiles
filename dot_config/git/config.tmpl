@@ -1,9 +1,4 @@
 # vim: ft=gitconfig
-{{- if ne .chezmoi.username "cxcx" }}
-[user]
-	name = l1ttleflyyy
-	email = l1ttleflyyy@users.noreply.github.com
-{{- end }}
 [core]
 	editor = nvim
 {{- if eq .chezmoi.os "windows" }}
@@ -32,29 +27,18 @@
 	d = difftool
 	stsh = stash
 	stat = status
-{{- if eq .chezmoi.os "linux" }}
+{{- if ne .chezmoi.username "cxcx" }}
+[user]
+	name = l1ttleflyyy
+	email = l1ttleflyyy@users.noreply.github.com
 [credential "https://github.com"]
-	helper = 
-	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
+	helper =
+	helper = !gh auth git-credential
 [credential "https://gist.github.com"]
-	helper = 
-	helper = !/home/linuxbrew/.linuxbrew/bin/gh auth git-credential
-{{- end }}
-{{- if (and (eq .chezmoi.username "l1ttleflyyy") (eq .chezmoi.os "darwin")) }}
-[credential "https://github.com"]
-	helper = 
-	helper = !/opt/homebrew/bin/gh auth git-credential
-[credential "https://gist.github.com"]
-	helper = 
-	helper = !/opt/homebrew/bin/gh auth git-credential
+	helper =
+	helper = !gh auth git-credential
 {{- end }}
 {{- if eq .chezmoi.os "windows" }}
 [credential "helperselector"]
 	selected = manager
-[credential "https://github.com"]
-	helper = 
-	helper = !'D:\\Apps\\Scoop\\apps\\gh\\current\\bin\\gh.exe' auth git-credential
-[credential "https://gist.github.com"]
-	helper = 
-	helper = !'D:\\Apps\\Scoop\\apps\\gh\\current\\bin\\gh.exe' auth git-credential
 {{- end }}
