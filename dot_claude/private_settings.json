@@ -12,5 +12,9 @@
     "ask": [],
     "defaultMode": "default"
   },
-  "alwaysThinkingEnabled": true
+  "alwaysThinkingEnabled": true,
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.config/claude/claude-statusline.sh"
+  }
 }
