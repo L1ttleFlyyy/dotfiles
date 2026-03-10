@@ -1,0 +1,20 @@
+{
+  "theme": "nord",
+  "keymap": "macos",
+  "editor": {
+    "tab_size": 4,
+    "whitespace_indicators": true,
+    "osc_52": true,
+    "bracket_matching": true
+  },
+  "active_keybinding_map": "vscode",
+  "plugins": {
+    "vi_mode": {
+      "path": "/Users/cxcx/Library/Caches/fresh/embedded-plugins/9b8b7b3884daa5a9/vi_mode.ts",
+      "enabled": false
+    }
+  },
+  "file_explorer": {
+    "show_gitignored": true
+  }
+}
