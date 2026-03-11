@@ -544,6 +544,14 @@ vim.api.nvim_create_autocmd({ "FocusGained", "VimResume" }, { callback = query_b
 query_bg()
 
 -- ===========================================
+-- Insert-mode word navigation (macOS-style Option+Arrow via iTerm2 Esc+ sequences)
+-- ===========================================
+vim.keymap.set("i", "<M-b>",  "<C-o>b",  { desc = "Word backward" })
+vim.keymap.set("i", "<M-f>",  "<C-o>w",  { desc = "Word forward" })
+vim.keymap.set("i", "<M-BS>", "<C-w>",   { desc = "Delete word backward" })
+vim.keymap.set("i", "<M-d>",  "<C-o>dw", { desc = "Delete word forward" })
+
+-- ===========================================
 -- Key Mappings
 -- ===========================================
 
