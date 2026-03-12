@@ -25,8 +25,7 @@ Remove-Item Alias:clear
 function clear {Write-Output "$([char]27)[H$([char]27)[2J" }
 function c { clear }
 
-Remove-Item Alias:ls
-function ls { eza --icons=auto     $args }
+function l  { eza --icons=auto     $args }
 function ll { eza --icons=auto -l  $args }
 function la { eza --icons=auto -la $args }
 function tree { eza --tree --icons=auto $args }
