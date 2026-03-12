@@ -20,3 +20,6 @@ macos-option-as-alt = left
 keybind = cmd+left=text:\x01
 keybind = cmd+right=text:\x05
 keybind = cmd+backspace=text:\x15
+
+# enable notifications
+desktop-notifications = true

@@ -32,5 +32,12 @@
     "type": "command",
     "command": "bash ~/.config/claude/claude-statusline.sh"
   },
-  "alwaysThinkingEnabled": true
+  "alwaysThinkingEnabled": true,
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [{ "type": "command", "command": "~/.config/claude/tmux-notify.sh" }]
+      }
+    ]
+  }
 }
