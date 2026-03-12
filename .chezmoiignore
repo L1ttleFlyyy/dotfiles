@@ -17,6 +17,7 @@ bin/
 .local/
 .config/*
 !.config/git
+!.config/wezterm
 {{- end }}
 
 {{- if ne .chezmoi.os "darwin" }}
