@@ -1,0 +1,22 @@
+# Font
+font-family = FiraCode Nerd Font
+font-size = 16
+
+# Cursor
+cursor-style = bar
+cursor-style-blink = true
+
+# Theme (Catppuccin dark / Gruvbox light — auto light/dark)
+theme = light:Gruvbox Light,dark:Catppuccin Macchiato
+
+# macOS: tab bar integrates with titlebar, theme follows terminal background
+macos-titlebar-style = tabs
+window-theme = auto
+
+# macOS: left Option as Alt/Meta for word-movement keybinds
+macos-option-as-alt = left
+
+# Cmd key line-editing bindings
+keybind = cmd+left=text:\x01
+keybind = cmd+right=text:\x05
+keybind = cmd+backspace=text:\x15
