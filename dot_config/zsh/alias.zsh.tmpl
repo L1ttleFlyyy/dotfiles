@@ -28,7 +28,7 @@ alias czcd="cd $(chezmoi source-path)"
 {{- end }}
 
 # install ghostty terminfo on remote/local targets
-copy-ghostty-terminfo-ssh() { infocmp -x xterm-ghostty | ssh "$@" tic -x -o ~/.terminfo - }
+copy-ghostty-terminfo-ssh() { infocmp -x xterm-ghostty | ssh "$@" -- 'tic -x -o "$HOME/.terminfo"' - }
 copy-ghostty-terminfo-su() {
     local tmp=/tmp/ghostty-terminfo.$$ && infocmp -x xterm-ghostty > "$tmp" &&
     chmod 644 "$tmp" && su - "$1" -c "tic -x -o ~/.terminfo $tmp"; rm -f "$tmp"
