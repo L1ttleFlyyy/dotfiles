@@ -91,7 +91,8 @@ shorten_dir() {
     local anchor_files=".git .p4config .bzr .hg .svn CVS Cargo.toml go.mod package.json"
 
     # Expand ~ for home
-    dir="${dir/#$HOME/"~"}"
+    local tilde='~'
+    dir="${dir/#$HOME/$tilde}"
 
     # Split into array
     IFS='/' read -ra parts <<< "$dir"

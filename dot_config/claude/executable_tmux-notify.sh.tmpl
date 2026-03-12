@@ -1,14 +1,14 @@
 #!/bin/bash
 # vim: ft=bash
-# Claude Code Notification hook — sends OSC 9 desktop notifications via tmux.
+# Claude Code Notification hook — sends OSC 777 desktop notifications via tmux.
 
 [ -z "$TMUX" ] && exit 0
 read -r input
 message=$(echo "$input" | jq -r '.message // "Claude Code"')
 
-# DCS passthrough wrapping: \ePtmux;\e<OSC 9 payload>\e\\
-# tmux intercepts the DCS envelope and forwards the inner OSC 9 to the
-# outer terminal (Ghostty), which renders the desktop notification.
+# DCS passthrough wrapping: \ePtmux;\e<OSC 777 payload>\e\\
+# tmux intercepts the DCS envelope and forwards the inner OSC 777 to the
+# outer terminal, which renders the desktop notification.
 {{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 #
 # Why not just `printf ... > /dev/tty`?
@@ -21,7 +21,7 @@ message=$(echo "$input" | jq -r '.message // "Claude Code"')
 #   tmux run-shell executes in the tmux server's process context, which lives
 #   outside the bwrap sandbox. It has full access to write to the pane's PTY.
 pane_tty=$(tmux display-message -p '#{pane_tty}')
-tmux run-shell "printf '\\033Ptmux;\\033\\033]9;${message}\\007\\033\\\\' > $pane_tty"
+tmux run-shell "printf '\\033Ptmux;\\033\\033]777;notify;Claude Code;${message}\\007\\033\\\\' > $pane_tty"
 {{- else }}
-printf '\033Ptmux;\033\033]9;%s\007\033\\' "$message" > "/dev/tty"
+printf '\033Ptmux;\033\033]777;notify;Claude Code;%s\007\033\\' "$message" > "/dev/tty"
 {{- end }}
