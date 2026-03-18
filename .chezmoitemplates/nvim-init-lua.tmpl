@@ -578,6 +578,24 @@ end, { silent = true })
 -- x/X: delete without overwriting the yank register
 vim.keymap.set({ "n", "x" }, "x", '"_x', { silent = true })
 
+-- Visual paste: replace selection without overwriting the yank register
+vim.keymap.set("x", "p", '"_dP', { silent = true })
+
+-- c/C: change without overwriting the yank register
+vim.keymap.set({ "n", "x" }, "c", '"_c', { silent = true })
+vim.keymap.set("n", "C", '"_C', { silent = true })
+
+-- J: join lines without moving cursor
+vim.keymap.set("n", "J", "mzJ`z", { silent = true })
+
+-- n/N: center screen after search jump
+vim.keymap.set("n", "n", "nzzzv", { silent = true })
+vim.keymap.set("n", "N", "Nzzzv", { silent = true })
+
+-- Half-page jump: center screen after scroll
+vim.keymap.set("n", "<C-d>", "<C-d>zz", { silent = true })
+vim.keymap.set("n", "<C-u>", "<C-u>zz", { silent = true })
+
 -- ===========================================
 -- Additional Neovim Improvements
 -- ===========================================
