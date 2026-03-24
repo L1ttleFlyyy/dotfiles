@@ -21,5 +21,8 @@ keybind = cmd+left=text:\x01
 keybind = cmd+right=text:\x05
 keybind = cmd+backspace=text:\x15
 
+# disable close confirmation on Cmd+W
+confirm-close-surface = false
+
 # enable notifications
 desktop-notifications = true
