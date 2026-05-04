@@ -172,6 +172,11 @@ __apply_theme; alias apply-theme="__apply_theme"
 export EDITOR=nvim
 export SYSTEMD_EDITOR=nvim
 export SUDO_EDITOR=nvim
+
+# Cursor movement
+bindkey '^[[1;3D' backward-word
+bindkey '^[[1;3C' forward-word
+
 {{- if ne .chezmoi.os "darwin" }}
 sudo_edit() {
     [[ -z "$1" ]] && { echo "Usage: sudo_edit <file>"; return 1; }

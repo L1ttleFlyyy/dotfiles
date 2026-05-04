@@ -21,6 +21,10 @@ keybind = cmd+left=text:\x01
 keybind = cmd+right=text:\x05
 keybind = cmd+backspace=text:\x15
 
+# Forward-delete bindings (fn+delete = forward delete key on macOS)
+keybind = alt+delete=text:\x1bd
+keybind = cmd+delete=text:\x0b
+
 # disable close confirmation on Cmd+W
 confirm-close-surface = false
 
