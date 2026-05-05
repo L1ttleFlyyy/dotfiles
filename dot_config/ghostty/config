@@ -3,8 +3,9 @@ font-family = FiraCode Nerd Font
 font-size = 16
 
 # Cursor
-cursor-style = bar
 cursor-style-blink = true
+# disable shell-integration cursor override (bar is hard to see)
+shell-integration-features = no-cursor,sudo,title,ssh-env,ssh-terminfo,path
 
 # Theme (Catppuccin dark / Gruvbox light — auto light/dark)
 theme = light:Gruvbox Light,dark:Catppuccin Macchiato

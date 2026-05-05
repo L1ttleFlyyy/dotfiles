@@ -1,0 +1,93 @@
+#!/bin/sh
+# Install or update Neovim from GitHub releases to ~/.local/
+# Usage: nvim-update [stable|nightly]
+set -eu
+
+CHANNEL="${1:-stable}"
+PREFIX="$HOME/.local"
+
+# Guard: if nvim is managed by homebrew, bail out
+if command -v nvim >/dev/null 2>&1; then
+    NVIM_PATH="$(command -v nvim)"
+    case "$NVIM_PATH" in
+        /opt/homebrew/*|/home/linuxbrew/*|/usr/local/Cellar/*)
+            echo "nvim is installed via Homebrew at: $NVIM_PATH" >&2
+            echo "Run 'brew upgrade neovim' instead." >&2
+            exit 1 ;;
+    esac
+fi
+
+case "$(uname -m)" in
+    x86_64)          ARCH="x86_64" ;;
+    aarch64|arm64)   ARCH="arm64" ;;
+    *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+esac
+
+case "$(uname -s)" in
+    Linux)  OS="linux" ;;
+    Darwin) OS="macos" ;;
+    *) echo "Unsupported OS: $(uname -s)" >&2; exit 1 ;;
+esac
+
+# Linux: use appimage (self-contained, no glibc issues)
+# macOS: use tarball
+if [ "$OS" = "linux" ]; then
+    ARTIFACT="nvim-linux-${ARCH}.appimage"
+else
+    ARTIFACT="nvim-${OS}-${ARCH}.tar.gz"
+fi
+
+if [ "$CHANNEL" = "nightly" ]; then
+    URL="https://github.com/neovim/neovim/releases/download/nightly/${ARTIFACT}"
+else
+    URL="https://github.com/neovim/neovim/releases/latest/download/${ARTIFACT}"
+fi
+
+CURRENT=""
+if command -v nvim >/dev/null 2>&1; then
+    CURRENT="$(nvim --version | head -1)"
+fi
+
+echo "Channel:  $CHANNEL"
+echo "Current:  ${CURRENT:-not installed}"
+echo "Arch:     $ARCH"
+echo "Target:   $PREFIX"
+echo "URL:      $URL"
+echo ""
+
+TMPDIR="${TMPDIR:-/tmp}"
+TMPFILE="$TMPDIR/nvim-update-$$"
+trap 'rm -rf "$TMPFILE" "$TMPFILE.extracted"' EXIT
+
+echo "Downloading..."
+if command -v curl >/dev/null 2>&1; then
+    curl -fL --progress-bar -o "$TMPFILE" "$URL"
+elif command -v wget >/dev/null 2>&1; then
+    wget -q --show-progress -O "$TMPFILE" "$URL"
+else
+    echo "Neither curl nor wget found" >&2
+    exit 1
+fi
+
+mkdir -p "$PREFIX"
+
+if [ "$OS" = "linux" ]; then
+    echo "Extracting appimage to $PREFIX..."
+    chmod +x "$TMPFILE"
+    cd "$TMPDIR"
+    "$TMPFILE" --appimage-extract >/dev/null 2>&1
+    mv squashfs-root "$TMPFILE.extracted"
+    cp -rf "$TMPFILE.extracted/usr/"* "$PREFIX/"
+    cd - >/dev/null
+else
+    echo "Extracting tarball to $PREFIX..."
+    tar -xzf "$TMPFILE" --strip-components=1 -C "$PREFIX"
+fi
+
+NEW="$("$PREFIX/bin/nvim" --version | head -1)"
+echo ""
+echo "Done: $NEW"
+
+if ! echo "$PATH" | tr ':' '\n' | grep -qx "$PREFIX/bin"; then
+    echo "Note: $PREFIX/bin is not in your PATH"
+fi

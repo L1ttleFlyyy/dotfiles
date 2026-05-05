@@ -41,7 +41,6 @@ vim.opt.softtabstop = 4 -- Number of spaces per Tab press
 vim.opt.shiftwidth = 4 -- Number of spaces for each step of (auto)indent
 vim.opt.expandtab = true -- Convert tabs to spaces
 vim.opt.autoindent = true -- Copy indent from current line when starting new line
--- vim.opt.smartindent = true -- Smart auto-indenting, disabled, use treesitter
 
 -- Show whitespace characters
 vim.opt.list = true
@@ -76,6 +75,18 @@ vim.keymap.set({ "n", "x" }, "<leader>y", '"+y', { desc = "Yank to system clipbo
 vim.keymap.set({ "n", "x" }, "<leader>d", '"+d', { desc = "Cut to system clipboard" })
 vim.keymap.set({ "n", "x" }, "<leader>p", '"+p', { desc = "Paste from system clipboard" })
 
+
+-- ===========================================
+-- Treesitter capability detection
+-- ===========================================
+local has_treesitter = (function()
+    if vim.fn.has("nvim-0.12") == 0 then return false end
+    local cc = vim.env.CC or (vim.fn.executable("cc") == 1 and "cc")
+        or (vim.fn.executable("gcc") == 1 and "gcc")
+    if not cc then return false end
+    if vim.fn.executable("tree-sitter") == 0 then return false end
+    return true
+end)()
 
 -- ===========================================
 -- Plugin Manager Setup
@@ -175,17 +186,16 @@ require("lazy").setup(
                 )
             end
         },
-        -- Treesitter for better syntax highlighting (main branch rewrite, requires nvim 0.11+)
+        -- Treesitter (requires nvim 0.12+, tree-sitter-cli, C compiler)
         {
             "nvim-treesitter/nvim-treesitter",
             branch = "main",
             version = false,
             lazy = false,
+            cond = has_treesitter,
             build = ":TSUpdate",
             config = function()
-                vim.env.CC = "gcc"
 --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-                -- Register gmlarumbe's IEEE 1800-2023 parser as "systemverilog"
                 vim.api.nvim_create_autocmd('User', { pattern = 'TSUpdate',
                     callback = function()
                         require('nvim-treesitter.parsers').systemverilog = {
@@ -383,6 +393,7 @@ require("lazy").setup(
         {
             "MeanderingProgrammer/render-markdown.nvim",
             ft = { "markdown" },
+            cond = has_treesitter,
             dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
             opts = {},
         },
@@ -390,6 +401,7 @@ require("lazy").setup(
         {
             "nvim-treesitter/nvim-treesitter-context",
             event = { "BufReadPre", "BufNewFile" },
+            cond = has_treesitter,
             config = function()
                 require("treesitter-context").setup({ max_lines = 3, })
 --{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
@@ -496,6 +508,14 @@ require("lazy").setup(
         },
     }
 )
+
+-- ===========================================
+-- Treesitter fallback: enable built-in syntax when plugin is unavailable
+-- ===========================================
+if not has_treesitter then
+    vim.cmd("syntax on")
+    vim.cmd("filetype plugin indent on")
+end
 
 -- ===========================================
 -- colorscheme: statefile for instant startup, OSC 11 for live sync
