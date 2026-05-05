@@ -29,8 +29,6 @@ case "$(uname -s)" in
     *) echo "Unsupported OS: $(uname -s)" >&2; exit 1 ;;
 esac
 
-# Linux: use appimage (self-contained, no glibc issues)
-# macOS: use tarball
 if [ "$OS" = "linux" ]; then
     ARTIFACT="nvim-linux-${ARCH}.appimage"
 else
@@ -57,7 +55,7 @@ echo ""
 
 TMPDIR="${TMPDIR:-/tmp}"
 TMPFILE="$TMPDIR/nvim-update-$$"
-trap 'rm -rf "$TMPFILE" "$TMPFILE.extracted"' EXIT
+trap 'rm -rf "$TMPFILE"' EXIT
 
 echo "Downloading..."
 if command -v curl >/dev/null 2>&1; then
@@ -69,16 +67,31 @@ else
     exit 1
 fi
 
-mkdir -p "$PREFIX"
+mkdir -p "$PREFIX/bin"
 
 if [ "$OS" = "linux" ]; then
-    echo "Extracting appimage to $PREFIX..."
+    # Extract appimage into ~/.local/lib/nvim/ and create a wrapper.
+    # The wrapper invokes AppRun which sets LD_LIBRARY_PATH to the bundled
+    # libraries, so nvim works even on systems with old glibc.
+    NVIM_LIB="$PREFIX/lib/nvim"
+    echo "Extracting appimage to $NVIM_LIB..."
+    rm -rf "$NVIM_LIB"
     chmod +x "$TMPFILE"
     cd "$TMPDIR"
     "$TMPFILE" --appimage-extract >/dev/null 2>&1
-    mv squashfs-root "$TMPFILE.extracted"
-    cp -rf "$TMPFILE.extracted/usr/"* "$PREFIX/"
+    mv squashfs-root "$NVIM_LIB"
     cd - >/dev/null
+
+    # Wrapper script
+    cat > "$PREFIX/bin/nvim" <<'WRAPPER'
+#!/bin/sh
+exec "$HOME/.local/lib/nvim/AppRun" "$@"
+WRAPPER
+    chmod +x "$PREFIX/bin/nvim"
+
+    # Symlink man page so `man nvim` works
+    mkdir -p "$PREFIX/share/man/man1"
+    ln -sf "../../../lib/nvim/usr/share/man/man1/nvim.1" "$PREFIX/share/man/man1/nvim.1"
 else
     echo "Extracting tarball to $PREFIX..."
     tar -xzf "$TMPFILE" --strip-components=1 -C "$PREFIX"
