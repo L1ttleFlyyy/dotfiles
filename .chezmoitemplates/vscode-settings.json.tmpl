@@ -1,0 +1,47 @@
+{
+    "telemetry.telemetryLevel": "off",
+    "telemetry.feedback.enabled": false,
+    "security.workspace.trust.untrustedFiles": "open",
+    "chat.extensionUnification.enabled": false,
+    "chat.disableAIFeatures": true,
+    "window.autoDetectColorScheme": true,
+    "workbench.preferredDarkColorTheme": "Catppuccin Frappé",
+    "workbench.preferredLightColorTheme": "Gruvbox Light Hard",
+    "workbench.startupEditor": "none",
+    "notebook.stickyScroll.enabled": true,
+    "editor.smoothScrolling": true,
+    "editor.cursorBlinking": "smooth",
+    "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+    "editor.autoClosingBrackets": "never",
+    "editor.autoClosingQuotes": "never",
+    "editor.autoClosingDelete": "never",
+    "editor.autoClosingOvertype": "never",
+    "editor.autoClosingComments": "never",
+    "editor.wordSeparators": "~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "diffEditor.experimental.showMoves": true,
+    "diffEditor.hideUnchangedRegions.enabled": true,
+    "git.enableSmartCommit": true,
+    "terminal.integrated.enablePersistentSessions": false,
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.fontFamily": "'FiraCode Nerd Font', 'SpaceMono Nerd Font'",
+    "remote.SSH.connectTimeout": 30,
+    "remote.SSH.maxReconnectionAttempts": 2,
+    "remote.SSH.enableX11Forwarding": false,
+    "remote.SSH.experimental.chat": false,
+    "search.searchEditor.reusePriorSearchConfiguration": true,
+    "resmon.show.cpufreq": false,
+    "resmon.show.battery": false,
+    "claudeCode.preferredLocation": "panel",
+    "claudeCode.disableLoginPrompt": true,
+{{- if hasKey . "claudeCodeWrapper" }}
+    "claudeCode.claudeProcessWrapper": "{{ .claudeCodeWrapper }}",
+{{- end }}
+    "claudeCode.environmentVariables": [
+        { "name": "CLAUDE_CODE_ENABLE_TELEMETRY", "value": "false" }
+    ],
+    "settingsSync.ignoredSettings": [
+        "claudeCode.claudeProcessWrapper",
+        "remote.SSH.remotePlatform"
+    ]
+}

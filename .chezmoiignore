@@ -25,6 +25,10 @@ Library/
 bin/fix-macos-route
 {{- end }}
 
+{{- if ne .chezmoi.os "linux" }}
+.config/Code/
+{{- end }}
+
 {{- if or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (eq .chezmoi.username "cxcx") }}
 .claude
 {{- end }}

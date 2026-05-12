@@ -13,3 +13,9 @@
     command = "pwsh"
     args = ["-NoLogo", "-NoProfile"]
 #{- end }#
+
+#{- if or (and (eq .chezmoi.os "darwin") (eq .chezmoi.username "cxcx")) (eq (dig "id" "none" .chezmoi.osRelease) "rhel") }#
+
+[data]
+    claudeCodeWrapper = "#{ promptStringOnce . "claudeCodeWrapper" "Claude Code wrapper path" }#"
+#{- end }#
