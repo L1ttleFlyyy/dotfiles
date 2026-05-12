@@ -37,7 +37,7 @@ echo ""
 
 # Show commands
 echo "=== Commands to be executed ==="
-echo "1. sudo route delete -net 100.64.0.0/10 -interface $TAILSCALE_INTERFACE"
+echo "1. sudo route delete -net 100.64.0.0/10 on $TAILSCALE_INTERFACE (try -interface, then -ifscope)"
 echo "2. sudo route add -net ${TAILSCALE_SUBNET}.0/24 -interface $TAILSCALE_INTERFACE"
 echo ""
 
@@ -50,13 +50,17 @@ if [ "$AUTO_CONFIRM" = false ]; then
     echo ""
 fi
 
-# Execute
+# Tailscale installs the /10 as either a plain route (UCS) or scoped route (UCSI).
+# Try -interface first, then -ifscope, then verify via routing table.
 echo "Step 2: Removing conflicting /10 route"
-if sudo route delete -net 100.64.0.0/10 -interface "$TAILSCALE_INTERFACE" 2>/dev/null; then
-    echo "✓ Removed 100.64/10 route on $TAILSCALE_INTERFACE"
-else
-    echo "⚠ Route not found or already removed"
+sudo route delete -net 100.64.0.0/10 -interface "$TAILSCALE_INTERFACE" 2>&1 || true
+sudo route delete -net 100.64.0.0/10 -ifscope "$TAILSCALE_INTERFACE" 2>&1 || true
+
+if netstat -rn | grep -F "$TAILSCALE_INTERFACE" | grep -q "^100\.64/10"; then
+    echo "✗ Failed to remove 100.64/10 route on $TAILSCALE_INTERFACE"
+    exit 1
 fi
+echo "✓ Removed 100.64/10 route on $TAILSCALE_INTERFACE"
 
 echo ""
 echo "Step 3: Adding subnet and MagicDNS routes"
@@ -71,15 +75,6 @@ fi
 # Verification
 echo ""
 echo "=== Verification ==="
-
-if netstat -rn | grep -F "$TAILSCALE_INTERFACE" | grep -q "^100\.64/10"; then
-    echo "✗ FAILED: 100.64/10 route still present on $TAILSCALE_INTERFACE"
-    exit 1
-else
-    echo "✓ 100.64/10 route removed from $TAILSCALE_INTERFACE"
-fi
-
-echo ""
 echo "Current routes on $TAILSCALE_INTERFACE:"
 netstat -rn | grep -F "$TAILSCALE_INTERFACE"
 echo ""
