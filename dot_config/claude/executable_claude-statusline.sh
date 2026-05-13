@@ -30,24 +30,21 @@ else
     ctx_int=0
 fi
 
-# --- Model (shortened, e.g., "Opus 4.6") ---
+# --- Model (dynamic extraction: family + version + optional context tag) ---
 model_lc=$(printf '%s' "$model" | tr '[:upper:]' '[:lower:]')
-case "$model_lc" in
-    *opus*4.6*|*opus-4-6*)     model_short="Opus 4.6" ;;
-    *opus*4.5*|*opus-4-5*)     model_short="Opus 4.5" ;;
-    *opus*4*|*opus-4*)         model_short="Opus 4" ;;
-    *opus*)                    model_short="Opus" ;;
-    *sonnet*4.6*|*sonnet-4-6*) model_short="Sonnet 4.6" ;;
-    *sonnet*4.5*|*sonnet-4-5*) model_short="Sonnet 4.5" ;;
-    *sonnet*3.6*|*sonnet-3-6*) model_short="Sonnet 3.6" ;;
-    *sonnet*3.5*|*sonnet-3-5*) model_short="Sonnet 3.5" ;;
-    *sonnet*4*|*sonnet-4*)     model_short="Sonnet 4" ;;
-    *sonnet*)                  model_short="Sonnet" ;;
-    *haiku*3.5*|*haiku-3-5*)   model_short="Haiku 3.5" ;;
-    *haiku*3*|*haiku-3*)       model_short="Haiku 3" ;;
-    *haiku*)                   model_short="Haiku" ;;
-    *)                         model_short="${model:-unknown}" ;;
-esac
+if   [[ "$model_lc" == *opus* ]];   then family="Opus"
+elif [[ "$model_lc" == *sonnet* ]]; then family="Sonnet"
+elif [[ "$model_lc" == *haiku* ]];  then family="Haiku"
+else family=""
+fi
+
+if [ -n "$family" ]; then
+    version=$(printf '%s' "$model_lc" | grep -oE '[0-9]+[.-][0-9]+' | head -1 | tr '-' '.')
+    model_ctx=$(printf '%s' "$model" | grep -oiE '[0-9]+[km] context' | grep -oiE '[0-9]+[km]' | tr '[:lower:]' '[:upper:]')
+    model_short="${family}${version:+ $version}${model_ctx:+ (${model_ctx})}"
+else
+    model_short="${model:-unknown}"
+fi
 
 # --- Human-readable token count: 20000 → 20k, 1500000 → 1.5M ---
 human_tokens() {
