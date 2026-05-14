@@ -122,11 +122,11 @@ require("lazy").setup(
                 "TmuxNavigatorProcessList"
             },
             keys = {
-                {"<c-h>", "<cmd><C-U>TmuxNavigateLeft<cr>"},
-                {"<c-j>", "<cmd><C-U>TmuxNavigateDown<cr>"},
-                {"<c-k>", "<cmd><C-U>TmuxNavigateUp<cr>"},
-                {"<c-l>", "<cmd><C-U>TmuxNavigateRight<cr>"},
-                {"<c-\\>", "<cmd><C-U>TmuxNavigatePrevious<cr>"}
+                {"<M-h>", "<cmd><C-U>TmuxNavigateLeft<cr>"},
+                {"<M-j>", "<cmd><C-U>TmuxNavigateDown<cr>"},
+                {"<M-k>", "<cmd><C-U>TmuxNavigateUp<cr>"},
+                {"<M-l>", "<cmd><C-U>TmuxNavigateRight<cr>"},
+                {"<M-p>", "<cmd><C-U>TmuxNavigatePrevious<cr>"}
             }
         },
         {
@@ -391,16 +391,21 @@ require("lazy").setup(
             event = "VeryLazy",
             opts = {},
         },
-        -- Move lines/selections with Alt+hjkl (+ arrow key aliases)
+        -- Move lines/selections with Alt+arrows; Alt+hjkl is reserved for tmux/vim navigation.
         {
             "echasnovski/mini.move",
             event = "VeryLazy",
-            opts = {},
-            keys = {
-                { "<M-Up>",    "<M-k>", mode = { "n", "x" }, remap = true },
-                { "<M-Down>",  "<M-j>", mode = { "n", "x" }, remap = true },
-                { "<M-Left>",  "<M-h>", mode = { "n", "x" }, remap = true },
-                { "<M-Right>", "<M-l>", mode = { "n", "x" }, remap = true },
+            opts = {
+                mappings = {
+                    left = "<M-Left>",
+                    right = "<M-Right>",
+                    down = "<M-Down>",
+                    up = "<M-Up>",
+                    line_left = "<M-Left>",
+                    line_right = "<M-Right>",
+                    line_down = "<M-Down>",
+                    line_up = "<M-Up>",
+                },
             },
         },
         -- Show available keybindings in a popup when you pause after a prefix key
@@ -592,7 +597,6 @@ query_bg()
 vim.keymap.set("i", "<M-b>",  "<C-o>b",  { desc = "Word backward" })
 vim.keymap.set("i", "<M-f>",  "<C-o>w",  { desc = "Word forward" })
 vim.keymap.set("i", "<M-BS>", "<C-w>",   { desc = "Delete word backward" })
-vim.keymap.set("i", "<M-d>",  "<C-o>dw", { desc = "Delete word forward" })
 
 -- ===========================================
 -- Key Mappings
@@ -735,4 +739,3 @@ vim.cmd(
   cnoreabbrev Set set
 ]]
 )
-

@@ -23,7 +23,7 @@ features (Verilog/SystemVerilog tooling on RHEL, Perforce integration, etc.).
 | Plugin | Purpose |
 |--------|---------|
 | [lazy.nvim](https://github.com/folke/lazy.nvim) | Plugin manager (bootstrapped) |
-| [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | Seamless `<C-hjkl>` navigation between tmux panes and nvim splits |
+| [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator) | Seamless `<M-hjkl>` navigation between tmux panes and nvim splits |
 | [fzf-lua](https://github.com/ibhagwan/fzf-lua) | Fuzzy finder (files, grep, buffers, commands) |
 | [gruvbox.nvim](https://github.com/ellisonleao/gruvbox.nvim) | Light theme |
 | [catppuccin](https://github.com/catppuccin/nvim) | Dark theme (macchiato) |
@@ -39,7 +39,7 @@ features (Verilog/SystemVerilog tooling on RHEL, Perforce integration, etc.).
 | [mini.surround](https://github.com/echasnovski/mini.surround) | Surround actions (`sa`/`sd`/`sr`) |
 | [mini.ai](https://github.com/echasnovski/mini.ai) | Extended `a`/`i` textobjects (`aa`/`ia` for arguments, `af`/`if` for function calls) |
 | [mini.bracketed](https://github.com/echasnovski/mini.bracketed) | Bracket navigation (`]b`/`[b` for buffers, `]d`/`[d` for diagnostics, etc.) |
-| [mini.move](https://github.com/echasnovski/mini.move) | Move lines/selections (`Alt+hjkl`, `Alt+arrows`) |
+| [mini.move](https://github.com/echasnovski/mini.move) | Move lines/selections (`Alt+arrows`) |
 | [smear-cursor.nvim](https://github.com/sphamba/smear-cursor.nvim) | Cursor animation |
 | [which-key.nvim](https://github.com/folke/which-key.nvim) | Keybinding hints popup |
 | [vim-plugin-AnsiEsc](https://github.com/powerman/vim-plugin-AnsiEsc) | ANSI escape code rendering (`:AnsiEsc`) |
@@ -52,7 +52,7 @@ Leader key: `,`
 
 | Key | Action |
 |-----|--------|
-| `<C-h/j/k/l>` | Navigate between tmux panes / nvim splits |
+| `<M-h/j/k/l>` | Navigate between tmux panes / nvim splits |
 | `]b` / `[b` | Next / previous buffer |
 | `]h` / `[h` | Next / previous diff hunk (or `]c`/`[c` in diff mode) |
 | `-` | Open parent directory (oil.nvim) |
@@ -78,7 +78,7 @@ Leader key: `,`
 
 | Key | Action |
 |-----|--------|
-| `<M-hjkl>` or `<M-arrows>` | Move line(s) / selection (mini.move) |
+| `<M-arrows>` | Move line(s) / selection (mini.move) |
 | `<leader>/` or `<C-/>` | Toggle comment |
 | `<` / `>` (visual) | Indent/dedent (keeps selection) |
 | `x` | Delete char (black hole register) |
