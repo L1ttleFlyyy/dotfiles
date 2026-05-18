@@ -10,8 +10,10 @@
 - 先设计好框架，再分模块/步骤谈具体实现，不要一上来就开始big bang式写代码
 - 对于不了解的领域，必须先查资料，以官方文档为依据 ，同时也可以从社区经验(例如但不局限于github issues，reddit论坛等)中获取灵感
 - 执行方案时，不要想当然，必须分模块/步骤确认验证
-- 先用最简单的方案解决 (minimum viable product)，如果之后出现意外情况再重构 
+- 先用最简单的方案解决 (minimum viable product)，如果之后出现意外情况再重构
 - 写代码时不做过度的防御性编程，Premature Optimization is the Root of All Evil
+- 修改代码时保持surgical：只动与当前任务直接相关的部分，不要"顺手"重构/格式化/优化邻近代码；match existing style。发现无关问题可以提出来，但不要擅自改
+- 修bug时，先定位到最小复现 (minimum reproducible case)，再针对根因修复。不要看到症状就猜原因直接改，也不要用 try/except 之类的手段把症状掩盖掉
 
 # Tips:
 - 善用ask user question tool来确认用户问题表述模糊的地方
