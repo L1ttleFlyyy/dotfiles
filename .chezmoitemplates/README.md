@@ -118,6 +118,9 @@ Automatic selection based on OSC 11 terminal background queries:
 
 nvim queries the terminal on startup/focus/resume. Inside tmux 3.6+, tmux
 responds from its pane background, which is synced from `#{client_theme}`.
+Startup uses a short synchronous OSC 11 query before the first colorscheme is
+applied, so light terminals do not render a dark fallback first unless the
+terminal response misses that startup window.
 See `dot_config/colortheme/README.md` for the full architecture.
 
 ## Platform-Specific Features (RHEL)

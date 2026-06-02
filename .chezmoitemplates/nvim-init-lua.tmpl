@@ -89,6 +89,81 @@ local has_treesitter = (function()
 end)()
 
 -- ===========================================
+-- colorscheme: OSC 11 live sync
+-- ===========================================
+local terminal_bg = nil
+local current_theme_bg = nil
+local themes_loaded = false
+
+local function parse_osc11_bg(sequence)
+    local r, g, b = sequence:match("\027%]11;rgb:(%x+)/(%x+)/(%x+)")
+    if not r then return nil end
+
+    local function normalize(component)
+        local value = tonumber(component, 16)
+        if not value then return nil end
+        return value / ((16 ^ #component) - 1)
+    end
+
+    r, g, b = normalize(r), normalize(g), normalize(b)
+    if not (r and g and b) then return nil end
+
+    local lum = 0.299 * r + 0.587 * g + 0.114 * b
+    return lum >= 0.5 and "light" or "dark"
+end
+
+local function set_theme(bg)
+    if current_theme_bg == bg then return end
+    current_theme_bg = bg
+
+    if bg == "light" then
+        vim.o.background = "light"
+        vim.cmd("colorscheme gruvbox")
+    else
+        vim.o.background = "dark"
+        vim.cmd("colorscheme catppuccin-macchiato")
+    end
+end
+
+local function apply_terminal_bg(bg)
+    terminal_bg = bg
+    if themes_loaded then
+        vim.schedule(function()
+            set_theme(bg)
+        end)
+    end
+end
+
+vim.api.nvim_create_autocmd("TermResponse", {
+    callback = function(args)
+        local bg = parse_osc11_bg(args.data.sequence)
+        if bg then apply_terminal_bg(bg) end
+    end,
+})
+
+local function query_bg()
+    if vim.fn.has("ttyout") == 0 then return false end
+
+    if vim.v.vim_did_enter == 1 and vim.api.nvim_ui_send then
+        return pcall(vim.api.nvim_ui_send, "\27]11;?\27\\")
+    end
+
+    return pcall(function()
+        io.stdout:write("\27]11;?\27\\")
+        io.stdout:flush()
+    end)
+end
+
+-- Ask before lazy.nvim setup and wait briefly so the first rendered
+-- colorscheme can use the terminal background instead of a dark fallback.
+if query_bg() then
+    vim.wait(80, function()
+        return terminal_bg ~= nil
+    end, 5)
+end
+if terminal_bg then vim.o.background = terminal_bg end
+
+-- ===========================================
 -- Plugin Manager Setup
 -- ===========================================
 -- Bootstrap lazy.nvim
@@ -545,41 +620,11 @@ if not has_treesitter then
     vim.cmd("filetype plugin indent on")
 end
 
--- ===========================================
--- colorscheme: OSC 11 live sync
--- ===========================================
-local function set_theme(bg)
-    if bg == "light" then
-        vim.o.background = "light"
-        vim.cmd("colorscheme gruvbox")
-    else
-        vim.o.background = "dark"
-        vim.cmd("colorscheme catppuccin-macchiato")
-    end
-end
+themes_loaded = true
+set_theme(terminal_bg or "dark")
 
--- Default until the first terminal response arrives.
-set_theme("dark")
-
--- Parse OSC 11 response from terminal and apply
-vim.api.nvim_create_autocmd("TermResponse", {
-    callback = function(args)
-        local r, g, b = args.data.sequence:match("\027%]11;rgb:(%x+)/(%x+)/(%x+)")
-        if not r then return end
-        local lum = 0.299 * (tonumber(r, 16) / 65535)
-                  + 0.587 * (tonumber(g, 16) / 65535)
-                  + 0.114 * (tonumber(b, 16) / 65535)
-        local bg = lum >= 0.5 and "light" or "dark"
-        vim.schedule(function()
-            set_theme(bg)
-        end)
-    end,
-})
-
--- Query terminal background on startup and focus
-local function query_bg() io.stdout:write("\27]11;?\27\\") end
+-- Keep terminal background in sync after startup.
 vim.api.nvim_create_autocmd({ "FocusGained", "VimResume" }, { callback = query_bg })
-query_bg()
 
 -- ===========================================
 -- Insert-mode word navigation (macOS-style Option+Arrow via iTerm2 Esc+ sequences)

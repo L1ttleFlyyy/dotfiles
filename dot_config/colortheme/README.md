@@ -36,6 +36,12 @@ nvim sends OSC 11 on startup/focus/resume and applies the response:
 - Outside tmux, the response comes from the terminal emulator.
 - Inside tmux, the response comes from tmux's synced pane background.
 
+nvim sends one bounded synchronous startup query before applying the first
+colorscheme. This preserves the useful handoff behavior that the old statefile
+provided, without storing a global theme. If the startup query does not answer
+quickly, nvim falls back to dark and later `TermResponse` events still correct
+the theme.
+
 nvim does not read or write theme state on disk.
 
 ### zsh
