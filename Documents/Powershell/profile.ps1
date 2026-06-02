@@ -12,14 +12,7 @@ Import-Module PSCompletions
 
 $DUSER = "D:\Users\$env:USERNAME\"
 $Env:EDITOR = "nvim"
-# Theme: read statefile, detect + write if missing
-$themeFile = "$env:USERPROFILE\.config\colortheme\theme"
-if (-not (Test-Path $themeFile)) {
-    New-Item -ItemType Directory -Path (Split-Path $themeFile) -Force | Out-Null
-    $detected = if ((Get-WindowsAppsTheme) -eq "light") { "light" } else { "dark" }
-    Set-Content -Path $themeFile -Value $detected -NoNewline
-}
-$_theme = (Get-Content $themeFile).Trim()
+$_theme = if ((Get-WindowsAppsTheme) -eq "light") { "light" } else { "dark" }
 
 Remove-Item Alias:clear
 function clear {Write-Output "$([char]27)[H$([char]27)[2J" }

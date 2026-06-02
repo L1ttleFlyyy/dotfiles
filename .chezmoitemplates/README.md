@@ -112,11 +112,12 @@ Default `y`/`d`/`p` operate on vim's unnamed register only (no system clipboard 
 
 ## Colorscheme
 
-Automatic selection based on `~/.config/colortheme/theme` statefile:
+Automatic selection based on OSC 11 terminal background queries:
 - `light` -> gruvbox (light background)
 - anything else -> catppuccin macchiato (dark background)
 
-nvim reads the statefile at startup and maintains it via OSC 11 detection.
+nvim queries the terminal on startup/focus/resume. Inside tmux 3.6+, tmux
+responds from its pane background, which is synced from `#{client_theme}`.
 See `dot_config/colortheme/README.md` for the full architecture.
 
 ## Platform-Specific Features (RHEL)

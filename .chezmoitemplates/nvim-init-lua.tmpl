@@ -546,7 +546,7 @@ if not has_treesitter then
 end
 
 -- ===========================================
--- colorscheme: statefile for instant startup, OSC 11 for live sync
+-- colorscheme: OSC 11 live sync
 -- ===========================================
 local function set_theme(bg)
     if bg == "light" then
@@ -558,11 +558,8 @@ local function set_theme(bg)
     end
 end
 
--- Instant startup: read statefile, fall back to dark
-local _sf = vim.fn.expand("~/.config/colortheme/theme")
-vim.fn.mkdir(vim.fn.fnamemodify(_sf, ":h"), "p")
-local _ok, _lines = pcall(vim.fn.readfile, _sf)
-set_theme((_ok and _lines[1]) or "dark")
+-- Default until the first terminal response arrives.
+set_theme("dark")
 
 -- Parse OSC 11 response from terminal and apply
 vim.api.nvim_create_autocmd("TermResponse", {
@@ -575,13 +572,6 @@ vim.api.nvim_create_autocmd("TermResponse", {
         local bg = lum >= 0.5 and "light" or "dark"
         vim.schedule(function()
             set_theme(bg)
---{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--
-            if os.getenv("SSH_CLIENT") then
-                vim.fn.writefile({bg}, vim.fn.expand("~/.config/colortheme/theme"))
-            end
---{- else }--
-            vim.fn.writefile({bg}, vim.fn.expand("~/.config/colortheme/theme"))
---{- end }--
         end)
     end,
 })

@@ -150,21 +150,6 @@ zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
 zstyle ':fzf-tab:*' popup-min-size 120 10
 
 # =============================================================
-#                       Color theme
-# =============================================================
-
-source $HOME/.config/colortheme/apply-theme.sh
-
-{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
-if [[ -n "$SSH_CLIENT" ]]; then
-    __apply_theme; alias apply-theme="__apply_theme"
-fi
-# RHEL VNC: nvim handles theme via OSC 11 — nothing to do
-{{- else }}
-__apply_theme; alias apply-theme="__apply_theme"
-{{- end }}
-
-# =============================================================
 #                      User Aliases
 # =============================================================
 
