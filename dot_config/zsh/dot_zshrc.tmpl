@@ -82,15 +82,6 @@ export FZF_ALT_C_OPTS='--preview "eza --tree --icons=auto --color=always -L 2 {}
 # rg config
 export RIPGREP_CONFIG_PATH="$HOME/.config/rg/ripgreprc"
 
-{{- if ne (dig "id" "none" .chezmoi.osRelease) "rhel" }}
-# =============================================================
-#                      Start SSH-Agent
-# =============================================================
-if [ -z "$SSH_AUTH_SOCK" ]; then
-    eval "$(ssh-agent -s)"  &> /dev/null
-fi
-{{- end }}
-
 # =============================================================
 #                      Zinit Setup
 # =============================================================

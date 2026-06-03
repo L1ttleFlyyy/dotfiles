@@ -45,6 +45,7 @@
     "command": "bash ~/.config/claude/claude-statusline.sh"
   },
   "alwaysThinkingEnabled": true,
-  "theme": "dark-ansi",
-  "effortLevel": "high"
+  "effortLevel": "xhigh",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark-ansi"
 }
