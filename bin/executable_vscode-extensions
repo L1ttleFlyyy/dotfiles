@@ -1,0 +1,87 @@
+#!/bin/sh
+set -eu
+
+code_cli=${CODE_CLI:-code}
+config_home=${XDG_CONFIG_HOME:-$HOME/.config}
+list_file=${VSCODE_EXTENSIONS_LIST:-$config_home/vscode/ext-list-chezmoi.txt}
+
+usage() {
+    cat <<EOF
+Usage: vscode-extensions <command>
+
+Commands:
+  install   Install missing VSCode client extensions from the managed list
+  missing   Print managed extensions that are not installed
+  list      Print currently installed VSCode client extensions
+  export    Print installed VSCode client extensions sorted for updating the list
+EOF
+}
+
+require_code() {
+    if ! command -v "$code_cli" >/dev/null 2>&1; then
+        echo "VSCode CLI '$code_cli' not found" >&2
+        exit 1
+    fi
+}
+
+require_list() {
+    if [ ! -f "$list_file" ]; then
+        echo "Extension list not found: $list_file" >&2
+        exit 1
+    fi
+}
+
+managed_extensions() {
+    sed -e 's/#.*$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$list_file" |
+        awk 'NF' |
+        sort -fu
+}
+
+installed_extensions() {
+    "$code_cli" --list-extensions |
+        tr '[:upper:]' '[:lower:]' |
+        sort -fu
+}
+
+missing_extensions() {
+    managed_extensions | while IFS= read -r extension; do
+        if ! printf '%s\n' "$installed" | grep -Fxq "$(printf '%s' "$extension" | tr '[:upper:]' '[:lower:]')"; then
+            printf '%s\n' "$extension"
+        fi
+    done
+}
+
+command=${1:-}
+
+case "$command" in
+    install)
+        require_code
+        require_list
+        installed=$(installed_extensions)
+        missing_extensions | while IFS= read -r extension; do
+            echo "Installing $extension"
+            "$code_cli" --install-extension "$extension"
+        done
+        ;;
+    missing)
+        require_code
+        require_list
+        installed=$(installed_extensions)
+        missing_extensions
+        ;;
+    list)
+        require_code
+        installed_extensions
+        ;;
+    export)
+        require_code
+        "$code_cli" --list-extensions | sort -f
+        ;;
+    -h|--help|help)
+        usage
+        ;;
+    *)
+        usage >&2
+        exit 2
+        ;;
+esac
