@@ -26,7 +26,7 @@
     ],
     "deny": [],
     "ask": [],
-    "defaultMode": "default"
+    "defaultMode": "auto"
   },
   "model": "opus",
   "hooks": {
@@ -50,4 +50,8 @@
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
   "enableWorkflows": false
+  "workflowKeywordTriggerEnabled": false,
+  "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true
 }
