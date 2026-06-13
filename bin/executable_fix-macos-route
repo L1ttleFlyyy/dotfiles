@@ -37,7 +37,8 @@ echo ""
 
 # Show commands
 echo "=== Commands to be executed ==="
-echo "1. sudo route delete -net 100.64.0.0/10 on $TAILSCALE_INTERFACE (try -interface, then -ifscope)"
+echo "1. sudo route delete -net 100.64.0.0/10 -ifscope $TAILSCALE_INTERFACE (scoped route)"
+echo "   + global 100.64/10 only if it currently points at $TAILSCALE_INTERFACE"
 echo "2. sudo route add -net ${TAILSCALE_SUBNET}.0/24 -interface $TAILSCALE_INTERFACE"
 echo ""
 
@@ -51,10 +52,23 @@ if [ "$AUTO_CONFIRM" = false ]; then
 fi
 
 # Tailscale installs the /10 as either a plain route (UCS) or scoped route (UCSI).
-# Try -interface first, then -ifscope, then verify via routing table.
-echo "Step 2: Removing conflicting /10 route"
-sudo route delete -net 100.64.0.0/10 -interface "$TAILSCALE_INTERFACE" 2>&1 || true
+# IMPORTANT: on macOS `route delete -interface X` does NOT restrict deletion to X;
+# it deletes whichever 100.64/10 route is in the global table (which may belong to a
+# Work VPN on a different utun). Only -ifscope is interface-safe.
+echo "Step 2: Removing conflicting /10 route on $TAILSCALE_INTERFACE"
+
+# 1. Delete the interface-scoped route (UCSI) — safe, only touches this interface.
 sudo route delete -net 100.64.0.0/10 -ifscope "$TAILSCALE_INTERFACE" 2>&1 || true
+
+# 2. The global (unscoped) 100.64/10 route is shared territory. Delete it ONLY if it
+#    currently points at our Tailscale interface, otherwise we'd nuke the Work VPN's route.
+global_iface=$(netstat -rn -f inet | awk '$1=="100.64/10" && $3 !~ /I/ {print $4; exit}')
+if [ "$global_iface" = "$TAILSCALE_INTERFACE" ]; then
+    echo "  Global 100.64/10 belongs to $TAILSCALE_INTERFACE, removing it too"
+    sudo route delete -net 100.64.0.0/10 2>&1 || true
+elif [ -n "$global_iface" ]; then
+    echo "  Keeping global 100.64/10 (owned by $global_iface, not Tailscale)"
+fi
 
 if netstat -rn | grep -F "$TAILSCALE_INTERFACE" | grep -q "^100\.64/10"; then
     echo "✗ Failed to remove 100.64/10 route on $TAILSCALE_INTERFACE"
