@@ -245,7 +245,7 @@ require("lazy").setup(
             "ellisonleao/gruvbox.nvim",
             priority = 1000,
             config = function()
-                require("gruvbox").setup()
+                require("gruvbox").setup({ transparent_mode = true })
             end
         },
         -- Catppuccin theme
@@ -256,7 +256,8 @@ require("lazy").setup(
             config = function()
                 require("catppuccin").setup(
                     {
-                        flavour = "macchiato" -- Options: latte, frappe, macchiato, mocha
+                        flavour = "macchiato", -- Options: latte, frappe, macchiato, mocha
+                        transparent_background = true,
                     }
                 )
             end
