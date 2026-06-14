@@ -49,7 +49,7 @@
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
-  "enableWorkflows": false
+  "enableWorkflows": false,
   "workflowKeywordTriggerEnabled": false,
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
