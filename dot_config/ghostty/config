@@ -8,7 +8,7 @@ cursor-style-blink = true
 shell-integration-features = no-cursor,sudo,title,ssh-env,no-ssh-terminfo,path
 
 # Theme (Catppuccin dark / Gruvbox light — auto light/dark)
-theme = light:Gruvbox Light,dark:Catppuccin Macchiato
+theme = light:Gruvbox Material Light,dark:Catppuccin Macchiato
 
 # macOS: tab bar integrates with titlebar, theme follows terminal background
 macos-titlebar-style = tabs
