@@ -3,7 +3,8 @@ alias clear='echo -ne "\033c"'
 alias c='clear'
 alias df='df --human-readable'
 alias du='dust --limit-filesystem'
-alias fcp='rsync --archive --human-readable --partial --progress --copy-links --keep-dirlinks --no-inc-recursive'
+alias fcp_deref='rsync --archive --human-readable --partial --progress --copy-links --keep-dirlinks --no-inc-recursive'
+alias fcp='rsync -aHAX --human-readable --info=progress2'
 
 # better ls
 alias l="eza --icons=auto"
