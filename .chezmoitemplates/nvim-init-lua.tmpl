@@ -258,6 +258,17 @@ require("lazy").setup(
                     {
                         flavour = "macchiato", -- Options: latte, frappe, macchiato, mocha
                         transparent_background = true,
+                        custom_highlights = function(C)
+                            -- Default DiffText (inline changed chars) blends blue into
+                            -- base at 0.30, which is nearly invisible under a transparent
+                            -- background. Mix against base for a stable opaque color, but
+                            -- brighten it and keep DiffText clearly stronger than DiffChange.
+                            local U = require("catppuccin.utils.colors")
+                            return {
+                                DiffChange = { bg = U.darken(C.blue, 0.15, C.base) },
+                                DiffText   = { bg = U.darken(C.blue, 0.45, C.base), bold = true },
+                            }
+                        end,
                     }
                 )
             end
