@@ -35,5 +35,9 @@ copy-ghostty-terminfo-su() {
     chmod 644 "$tmp" && su - "$1" -c "tic -x -o ~/.terminfo $tmp"; rm -f "$tmp"
 }
 
+# crc: launch claude remote-control for $PWD, name defaults to dir basename.
+#   crc [name] [extra claude flags...]
+crc() { claude remote-control --name "${1:-${PWD:t}}" "${@:2}" }
+
 # additional user aliases
 [[ -r "${ZDOTDIR}/alias.local" ]] && source "${ZDOTDIR}/alias.local"
