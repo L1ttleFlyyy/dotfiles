@@ -37,17 +37,5 @@ bin/com.luuumi.fix-macos-route.plist
 
 {{- if ne (dig "id" "none" .chezmoi.osRelease) "bazzite" }}
 .var/app/
-.config/systemd/
-.config/autostart/
 .config/environment.d/
-bin/wifi-smart-daemon
-{{- end }}
-
-{{- if eq .chezmoi.username "bazzite" }}
-.config/autostart/lockscreen.desktop
-.config/environment.d/touchpad-fix.conf
-{{- end }}
-
-{{- if eq .chezmoi.username "cxcx" }}
-.claude
 {{- end }}

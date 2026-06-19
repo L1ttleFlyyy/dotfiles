@@ -1,6 +1,0 @@
-[Desktop Entry]
-Exec=loginctl lock-session
-Icon=application-x-shellscript
-Name=lockscreen
-Type=Application
-X-KDE-AutostartScript=true
