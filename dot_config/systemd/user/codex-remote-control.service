@@ -1,0 +1,20 @@
+[Unit]
+Description=Codex remote-control managed app-server
+Documentation=https://github.com/openai/codex/blob/main/codex-rs/app-server-daemon/README.md
+StartLimitIntervalSec=10min
+StartLimitBurst=5
+
+[Service]
+Type=forking
+ExitType=cgroup
+GuessMainPID=no
+Environment=CODEX_HOME=%h/.codex
+ExecStart=%h/.codex/packages/standalone/current/codex remote-control start --json
+ExecStop=%h/.codex/packages/standalone/current/codex remote-control stop --json
+Restart=always
+RestartSec=30
+TimeoutStartSec=180
+TimeoutStopSec=90
+
+[Install]
+WantedBy=default.target
