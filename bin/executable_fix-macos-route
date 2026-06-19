@@ -26,7 +26,7 @@ case "${1:-}" in
     --auto)   CONFIRMED=true; DAEMON=true ;;
 esac
 
-# say(): the chatty narration. Gated off in daemon mode (it polls every 10s;
+# say(): the chatty narration. Gated off in daemon mode (it polls every 5s;
 # narration would flood the log). All routine/per-poll output goes through say()
 # so the daemon stays quiet when there is nothing to do.
 say() {

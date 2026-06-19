@@ -12,37 +12,24 @@
         <string>--auto</string>
     </array>
 
-    <!-- Event-driven trigger: launchd wakes us on any network configuration
-         change. This is a "dumb" notification (it only says *something* changed),
-         so the script re-checks the routing table itself. Covers Wi-Fi up/down,
-         primary-service / route / DNS changes — i.e. when Tailscale re-grabs the
-         broad 100.64/10 route. -->
-    <key>LaunchEvents</key>
-    <dict>
-        <key>com.apple.notifyd.matching</key>
-        <dict>
-            <key>com.apple.system.config.network_change</key>
-            <dict>
-                <key>Notification</key>
-                <string>com.apple.system.config.network_change</string>
-            </dict>
-        </dict>
-    </dict>
+    <!-- Pure polling. We tried the event-driven LaunchEvents +
+         com.apple.system.config.network_change hook, but that notification is
+         not reliably delivered to a LaunchDaemon (Wi-Fi up/down, network switch,
+         and Tailscale connect/disconnect did not wake the job), so it has been
+         removed. The script is a silent no-op when healthy, so polling is cheap.
 
-    <!-- Safety-net poll: sleep -> wake rebuilds the network stack without always
-         firing network_change. 10s bounds how long routing can stay broken. The
-         script is a silent no-op when healthy, so frequent polling is cheap. -->
+         5s bounds how long routing can stay broken after Tailscale re-grabs the
+         100.64/10 route. ThrottleInterval must also be 5: launchd's default
+         minimum spacing between launches is 10s, which would otherwise cap the
+         effective poll interval at 10s regardless of StartInterval. -->
     <key>StartInterval</key>
-    <integer>10</integer>
+    <integer>5</integer>
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
 
     <!-- Fix immediately on load / boot. -->
     <key>RunAtLoad</key>
     <true/>
-
-    <!-- Coalesce the burst of network_change notifications a Wi-Fi switch emits;
-         also the launchd minimum between starts. -->
-    <key>ThrottleInterval</key>
-    <integer>10</integer>
 
     <key>StandardOutPath</key>
     <string>/var/log/fix-macos-route.log</string>
