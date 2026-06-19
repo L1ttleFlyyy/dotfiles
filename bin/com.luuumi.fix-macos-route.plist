@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.luuumi.fix-macos-route</string>
+
+    <!-- Runs as root (LaunchDaemon default) so `route add/delete` needs no password. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/sbin/fix-macos-route</string>
+        <string>--auto</string>
+    </array>
+
+    <!-- Event-driven trigger: launchd wakes us on any network configuration
+         change. This is a "dumb" notification (it only says *something* changed),
+         so the script re-checks the routing table itself. Covers Wi-Fi up/down,
+         primary-service / route / DNS changes — i.e. when Tailscale re-grabs the
+         broad 100.64/10 route. -->
+    <key>LaunchEvents</key>
+    <dict>
+        <key>com.apple.notifyd.matching</key>
+        <dict>
+            <key>com.apple.system.config.network_change</key>
+            <dict>
+                <key>Notification</key>
+                <string>com.apple.system.config.network_change</string>
+            </dict>
+        </dict>
+    </dict>
+
+    <!-- Safety-net poll: sleep -> wake rebuilds the network stack without always
+         firing network_change. 10s bounds how long routing can stay broken. The
+         script is a silent no-op when healthy, so frequent polling is cheap. -->
+    <key>StartInterval</key>
+    <integer>10</integer>
+
+    <!-- Fix immediately on load / boot. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Coalesce the burst of network_change notifications a Wi-Fi switch emits;
+         also the launchd minimum between starts. -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/fix-macos-route.log</string>
+    <key>StandardErrorPath</key>
+    <string>/var/log/fix-macos-route.log</string>
+</dict>
+</plist>

@@ -1,24 +1,60 @@
 #!/bin/bash
 
 # Fix Tailscale routing on macOS when Work VPN conflicts with 100.64/10
-# Replaces the broad /10 route with a /24 subnet route + MagicDNS host route
+# Replaces the broad /10 route with a /24 subnet route.
+#
+# Usage:
+#   fix-macos-route          interactive (asks before touching routes)
+#   fix-macos-route --yes    non-interactive, always apply
+#   fix-macos-route --auto   daemon mode (used by the LaunchDaemon): implies
+#                            --yes and stays silent
+#
+# Behavior is identical in all three modes. The only things that differ:
+#   - DAEMON   -> suppresses the chatty narration (see say()); milestone events
+#                 still go to the log via log()
+#   - CONFIRMED -> skips the interactive prompt
+# Everything else, including the conflict gate, runs the same way everywhere.
 
 set -e
 
 TAILSCALE_SUBNET="100.123.123"
-AUTO_CONFIRM=false
+CONFIRMED=false
+DAEMON=false
 
-if [[ "$1" == "--yes" || "$1" == "-y" ]]; then
-    AUTO_CONFIRM=true
-fi
+case "${1:-}" in
+    --yes|-y) CONFIRMED=true ;;
+    --auto)   CONFIRMED=true; DAEMON=true ;;
+esac
 
-echo "=== Fixing Tailscale routing conflicts ==="
-echo ""
+# say(): the chatty narration. Gated off in daemon mode (it polls every 10s;
+# narration would flood the log). All routine/per-poll output goes through say()
+# so the daemon stays quiet when there is nothing to do.
+say() {
+    [ "$DAEMON" = true ] || echo "$@"
+}
 
-# Detect Tailscale interface by matching subnet on utun interfaces
-echo "Step 1: Detecting Tailscale interface"
+# log(): milestone events worth keeping a record of. Always prints, in every
+# mode — these only fire on a REAL conflict (rare), so the daemon log gets a
+# line or two per actual fix, never per poll. Timestamped in daemon mode only
+# (useful in a log file, noise in an interactive terminal).
+log() {
+    if [ "$DAEMON" = true ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+    else
+        echo "$@"
+    fi
+}
+
+say "=== Fixing Tailscale routing conflicts ==="
+say ""
+
+# --- Detect the Tailscale interface (this is also the "Tailscale up" gate) ---
+#
+# We never shell out to the Tailscale CLI: it is slow, forks the GUI app, and
+# tells us nothing about the routing table. The authoritative signal is a utun
+# interface carrying an address in our Tailscale subnet.
+say "Step 1: Detecting Tailscale interface"
 TAILSCALE_INTERFACE=""
-
 for iface in $(ifconfig -l | tr ' ' '\n' | grep "^utun"); do
     if ifconfig "$iface" 2>/dev/null | grep -q "inet ${TAILSCALE_SUBNET}\."; then
         TAILSCALE_INTERFACE="$iface"
@@ -27,75 +63,107 @@ for iface in $(ifconfig -l | tr ' ' '\n' | grep "^utun"); do
 done
 
 if [ -z "$TAILSCALE_INTERFACE" ]; then
-    echo "✗ Error: No utun interface found with subnet ${TAILSCALE_SUBNET}.0/24"
-    echo "Is Tailscale running?"
-    exit 1
+    # Tailscale is not up: nothing to fix, not an error. exit 0 keeps the daemon
+    # from logging a failure (and tripping launchd throttling) every poll.
+    say "✗ No utun interface with subnet ${TAILSCALE_SUBNET}.x — is Tailscale running?"
+    exit 0
 fi
+say "✓ Detected Tailscale interface: $TAILSCALE_INTERFACE"
+say ""
 
-echo "✓ Detected Tailscale interface: $TAILSCALE_INTERFACE"
-echo ""
+# --- Conflict gate (runs in every mode) ---
+#
+# A REAL conflict is exactly one of:
+#   (a) a 100.64/10 route whose netif is the Tailscale interface — Tailscale
+#       grabbed the broad route back (scoped UCSI or global UCS), or
+#   (b) the 100.123.123/24 override route is missing.
+#
+# A 100.64/10 route owned by the Work VPN (a DIFFERENT netif) is NOT a conflict
+# — that is the normal, healthy state. This is what keeps us from ever deleting
+# the Work VPN's route.
+has_conflict() {
+    local slash10_on_ts override_present
+    slash10_on_ts=$(netstat -rn -f inet | awk -v ts="$TAILSCALE_INTERFACE" \
+        '$1=="100.64/10" && $4==ts {print; exit}')
+    override_present=$(netstat -rn -f inet | awk -v ov="${TAILSCALE_SUBNET}/24" \
+        '$1==ov {print; exit}')
 
-# Show commands
-echo "=== Commands to be executed ==="
-echo "1. sudo route delete -net 100.64.0.0/10 -ifscope $TAILSCALE_INTERFACE (scoped route)"
-echo "   + global 100.64/10 only if it currently points at $TAILSCALE_INTERFACE"
-echo "2. sudo route add -net ${TAILSCALE_SUBNET}.0/24 -interface $TAILSCALE_INTERFACE"
-echo ""
+    [ -n "$slash10_on_ts" ] && return 0          # (a)
+    [ -z "$override_present" ] && return 0        # (b)
+    return 1
+}
 
-if [ "$AUTO_CONFIRM" = false ]; then
+if ! has_conflict; then
+    say "✓ No routing conflict — nothing to do"
+    exit 0
+fi
+log "⚠ Routing conflict detected on $TAILSCALE_INTERFACE"
+say ""
+
+# --- Show what we are about to do, and confirm (unless already confirmed) ---
+say "=== Commands to be executed ==="
+say "1. sudo route delete -net 100.64.0.0/10 -ifscope $TAILSCALE_INTERFACE (scoped route)"
+say "   + global 100.64/10 only if it currently points at $TAILSCALE_INTERFACE"
+say "2. sudo route add -net ${TAILSCALE_SUBNET}.0/24 -interface $TAILSCALE_INTERFACE"
+say ""
+
+if [ "$CONFIRMED" = false ]; then
     read -p "Proceed? [N/y]: " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        echo "Cancelled"
+        say "Cancelled"
         exit 0
     fi
-    echo ""
+    say ""
 fi
 
 # Tailscale installs the /10 as either a plain route (UCS) or scoped route (UCSI).
 # IMPORTANT: on macOS `route delete -interface X` does NOT restrict deletion to X;
 # it deletes whichever 100.64/10 route is in the global table (which may belong to a
 # Work VPN on a different utun). Only -ifscope is interface-safe.
-echo "Step 2: Removing conflicting /10 route on $TAILSCALE_INTERFACE"
+say "Step 2: Removing conflicting /10 route on $TAILSCALE_INTERFACE"
 
 # 1. Delete the interface-scoped route (UCSI) — safe, only touches this interface.
-sudo route delete -net 100.64.0.0/10 -ifscope "$TAILSCALE_INTERFACE" 2>&1 || true
+out=$(sudo route delete -net 100.64.0.0/10 -ifscope "$TAILSCALE_INTERFACE" 2>&1) || true
+if [ -n "$out" ]; then say "$out"; fi
 
 # 2. The global (unscoped) 100.64/10 route is shared territory. Delete it ONLY if it
 #    currently points at our Tailscale interface, otherwise we'd nuke the Work VPN's route.
 global_iface=$(netstat -rn -f inet | awk '$1=="100.64/10" && $3 !~ /I/ {print $4; exit}')
 if [ "$global_iface" = "$TAILSCALE_INTERFACE" ]; then
-    echo "  Global 100.64/10 belongs to $TAILSCALE_INTERFACE, removing it too"
-    sudo route delete -net 100.64.0.0/10 2>&1 || true
+    say "  Global 100.64/10 belongs to $TAILSCALE_INTERFACE, removing it too"
+    out=$(sudo route delete -net 100.64.0.0/10 2>&1) || true
+    if [ -n "$out" ]; then say "$out"; fi
 elif [ -n "$global_iface" ]; then
-    echo "  Keeping global 100.64/10 (owned by $global_iface, not Tailscale)"
+    say "  Keeping global 100.64/10 (owned by $global_iface, not Tailscale)"
 fi
 
 if netstat -rn | grep -F "$TAILSCALE_INTERFACE" | grep -q "^100\.64/10"; then
-    echo "✗ Failed to remove 100.64/10 route on $TAILSCALE_INTERFACE"
+    log "✗ Failed to remove 100.64/10 route on $TAILSCALE_INTERFACE"
     exit 1
 fi
-echo "✓ Removed 100.64/10 route on $TAILSCALE_INTERFACE"
+say "✓ Removed 100.64/10 route on $TAILSCALE_INTERFACE"
 
-echo ""
-echo "Step 3: Adding subnet and MagicDNS routes"
+say ""
+say "Step 3: Adding subnet route"
 
-if sudo route add -net "${TAILSCALE_SUBNET}.0/24" -interface "$TAILSCALE_INTERFACE" 2>/dev/null; then
-    echo "✓ Added route: ${TAILSCALE_SUBNET}.0/24 -> $TAILSCALE_INTERFACE"
+if sudo route add -net "${TAILSCALE_SUBNET}.0/24" -interface "$TAILSCALE_INTERFACE" >/dev/null 2>&1; then
+    say "✓ Added route: ${TAILSCALE_SUBNET}.0/24 -> $TAILSCALE_INTERFACE"
 else
-    echo "⚠ Route already exists: ${TAILSCALE_SUBNET}.0/24"
+    say "⚠ Route already exists: ${TAILSCALE_SUBNET}.0/24"
 fi
 
+log "✓ Fixed: 100.64/10 removed, ${TAILSCALE_SUBNET}.0/24 -> $TAILSCALE_INTERFACE"
 
 # Verification
-echo ""
-echo "=== Verification ==="
-echo "Current routes on $TAILSCALE_INTERFACE:"
-netstat -rn | grep -F "$TAILSCALE_INTERFACE"
-echo ""
+say ""
+say "=== Verification ==="
+say "Current routes on $TAILSCALE_INTERFACE:"
+say "$(netstat -rn | grep -F "$TAILSCALE_INTERFACE")"
+say ""
 
-echo "Testing connectivity to arm-oci (100.123.123.8):"
+say "Testing connectivity to arm-oci (100.123.123.8):"
 if ping -c 1 -W 2 100.123.123.8 &>/dev/null; then
-    echo "✓ Ping successful"
+    say "✓ Ping successful"
 else
-    echo "✗ Ping failed (may need to wait for Tailscale to reconnect)"
+    say "✗ Ping failed (may need to wait for Tailscale to reconnect)"
 fi

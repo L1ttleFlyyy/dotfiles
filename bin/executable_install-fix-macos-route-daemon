@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Manual installer for the fix-macos-route LaunchDaemon.
+#
+# This is NOT run by chezmoi. After `chezmoi apply` lands the source files,
+# run this yourself to (re)install and enable the daemon. It needs sudo.
+#
+#   bin/install-fix-macos-route-daemon          install / reinstall + load
+#   bin/install-fix-macos-route-daemon uninstall  stop + remove everything
+#
+# What it manages (standard LaunchDaemon layout, all root-owned, outside $HOME):
+#   /usr/local/sbin/fix-macos-route                      executable copy
+#   /Library/LaunchDaemons/com.luuumi.fix-macos-route.plist   the job
+
+set -euo pipefail
+
+LABEL="com.luuumi.fix-macos-route"
+PLIST_DST="/Library/LaunchDaemons/${LABEL}.plist"
+BIN_DST="/usr/local/sbin/fix-macos-route"
+
+# Resolve source paths relative to this script (works from the chezmoi target dir);
+# the script and plist are installed side by side in ~/bin.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BIN_SRC="${SCRIPT_DIR}/fix-macos-route"
+PLIST_SRC="${SCRIPT_DIR}/${LABEL}.plist"
+
+uninstall() {
+    echo "Stopping and removing ${LABEL}..."
+    sudo launchctl bootout system "$PLIST_DST" 2>/dev/null || true
+    sudo rm -f "$PLIST_DST" "$BIN_DST"
+    echo "✓ Uninstalled"
+}
+
+install() {
+    if [ ! -f "$BIN_SRC" ]; then
+        echo "✗ Source script not found: $BIN_SRC" >&2
+        exit 1
+    fi
+    if [ ! -f "$PLIST_SRC" ]; then
+        echo "✗ Source plist not found: $PLIST_SRC" >&2
+        exit 1
+    fi
+
+    echo "Installing root-owned script -> $BIN_DST"
+    sudo install -d -o root -g wheel -m 0755 /usr/local/sbin
+    sudo install -o root -g wheel -m 0755 "$BIN_SRC" "$BIN_DST"
+
+    echo "Installing LaunchDaemon -> $PLIST_DST"
+    sudo install -o root -g wheel -m 0644 "$PLIST_SRC" "$PLIST_DST"
+
+    # Reload: bootout an old instance (ignore if absent), then bootstrap.
+    echo "Loading daemon..."
+    sudo launchctl bootout system "$PLIST_DST" 2>/dev/null || true
+    sudo launchctl bootstrap system "$PLIST_DST"
+    sudo launchctl enable "system/${LABEL}"
+
+    echo "✓ Installed and loaded."
+    echo ""
+    echo "Status:"
+    sudo launchctl print "system/${LABEL}" | grep -E "state|program|pid" || true
+    echo ""
+    echo "Logs:    tail -f /var/log/fix-macos-route.log"
+    echo "Kick:    sudo launchctl kickstart -k system/${LABEL}"
+}
+
+case "${1:-install}" in
+    uninstall|remove) uninstall ;;
+    install|"")       install ;;
+    *) echo "Usage: $(basename "$0") [install|uninstall]" >&2; exit 1 ;;
+esac

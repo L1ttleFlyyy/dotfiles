@@ -23,6 +23,8 @@ bin/
 {{- if ne .chezmoi.os "darwin" }}
 Library/
 bin/fix-macos-route
+bin/install-fix-macos-route-daemon
+bin/com.luuumi.fix-macos-route.plist
 {{- end }}
 
 {{- if or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (ne .chezmoi.os "linux") }}
