@@ -26,6 +26,13 @@ keybind = cmd+backspace=text:\x15
 keybind = alt+delete=text:\x1bd
 keybind = cmd+delete=text:\x0b
 
+# Recover a terminal left in a broken state (e.g. an abrupt SSH drop leaves the
+# remote tmux/nvim mouse tracking enabled, so the terminal spews control codes
+# on mouse input). The remote can't undo it once the link is dead; this resets
+# locally and works even while ssh is still hung. `reset` is a one-shot RIS that
+# also re-allows apps to re-enable mouse, unlike toggle_mouse_reporting.
+keybind = cmd+shift+r=reset
+
 # disable close confirmation on Cmd+W
 confirm-close-surface = false
 
