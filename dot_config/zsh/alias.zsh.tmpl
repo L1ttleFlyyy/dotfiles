@@ -3,6 +3,8 @@
 # it (RIS/\033c erases scrollback). Print a screenful of blank lines to push the
 # old content above the fold, then home the cursor so the next prompt starts on
 # the first line. Use `reset` when you actually want a full RIS/scrollback wipe.
+unalias clear 2>/dev/null  # some distros ship a default `clear` alias that
+                           # would make the function definition below a parse error
 clear() { repeat "${LINES:-$(tput lines)}" print ""; printf '\033[H'; }
 alias c='clear'
 alias df='df --human-readable'
