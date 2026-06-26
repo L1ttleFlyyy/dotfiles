@@ -1,5 +1,9 @@
 # vim: ft=zsh
-alias clear='echo -ne "\033c"'
+# `clear` scrolls the current screen up into the scrollback instead of wiping
+# it (RIS/\033c erases scrollback). Print a screenful of blank lines to push the
+# old content above the fold, then home the cursor so the next prompt starts on
+# the first line. Use `reset` when you actually want a full RIS/scrollback wipe.
+clear() { repeat "${LINES:-$(tput lines)}" print ""; printf '\033[H'; }
 alias c='clear'
 alias df='df --human-readable'
 alias du='dust --limit-filesystem'
@@ -27,6 +31,21 @@ alias czcd="cd $(chezmoi source-path)"
 [[ -x "/Applications/Tailscale.app/Contents/MacOS/Tailscale" ]] \
     && alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 {{- end }}
+
+# When an SSH connection dies abruptly (network change, sleep, `~.`), the
+# remote tmux/nvim never gets to disable mouse tracking, so afterwards the local
+# terminal spews control codes on mouse input. The remote can't fix this once
+# the link is dead; the tmux maintainer's recommended recovery is to run `reset`
+# locally (tmux#2616). ssh exits 255 *only* on its own errors / abnormal drops
+# and passes the remote shell's code through otherwise, so reset just in that
+# case -- clean logouts keep their scrollback (reset/RIS would clear it).
+# To recover manually any time, run `reset` (full RIS) locally.
+ssh() {
+    command ssh "$@"
+    local ret=$?
+    [[ $ret -eq 255 ]] && command reset
+    return $ret
+}
 
 # install ghostty terminfo on remote/local targets
 copy-ghostty-terminfo-ssh() { infocmp -x xterm-ghostty | ssh "$@" -- 'tic -x -o "$HOME/.terminfo"' - }

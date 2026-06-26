@@ -8,9 +8,7 @@ README.md
 AppData/
 Documents/
 .winconf/
-{{- end }}
-
-{{- if eq .chezmoi.os "windows" }}
+{{- else }}
 .zshenv
 .ignore
 bin/
@@ -25,17 +23,24 @@ Library/
 bin/fix-macos-route
 bin/install-fix-macos-route-daemon
 bin/com.luuumi.fix-macos-route.plist
-{{- end }}
-
-{{- if or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (ne .chezmoi.os "linux") }}
+{{- else}}
 .config/Code/
 {{- end }}
 
-{{- if or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (eq .chezmoi.username "cxcx") }}
-.claude
+{{- if ne .chezmoi.os "linux" }}
+.config/systemd/
 {{- end }}
 
 {{- if ne (dig "id" "none" .chezmoi.osRelease) "bazzite" }}
 .var/app/
 .config/environment.d/
+{{- end }}
+
+{{- if eq .chezmoi.username "cxcx" }}
+.claude
+{{- end }}
+
+{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+.config/Code/
+.claude
 {{- end }}
