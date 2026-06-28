@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+codex_home="${CODEX_HOME:-"$HOME/.codex"}"
+codex_bin="$codex_home/packages/standalone/current/codex"
+
+"$codex_bin" remote-control stop --json || true
+
+output="$("$codex_bin" remote-control start --json 2>&1)" && {
+    printf '%s\n' "$output"
+    exit 0
+}
+
+status=$?
+printf '%s\n' "$output" >&2
+
+case "$output" in
+    *"app server is running but is not managed by codex app-server daemon"*)
+        printf '%s\n' \
+            "codex-remote-control: unmanaged app-server is already running; leaving it untouched." >&2
+        exit 0
+        ;;
+esac
+
+exit "$status"

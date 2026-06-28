@@ -5,14 +5,14 @@ StartLimitIntervalSec=10min
 StartLimitBurst=5
 
 [Service]
-Type=forking
-ExitType=cgroup
-GuessMainPID=no
+Type=oneshot
+RemainAfterExit=yes
 Environment=CODEX_HOME=%h/.codex
-ExecStart=%h/.codex/packages/standalone/current/codex remote-control start --json
+ExecStart=%h/.config/systemd/user/codex-remote-control-start
+ExecReload=%h/.config/systemd/user/codex-remote-control-start
 ExecStop=%h/.codex/packages/standalone/current/codex remote-control stop --json
-Restart=always
-RestartSec=30
+Restart=on-failure
+RestartSec=60
 TimeoutStartSec=180
 TimeoutStopSec=90
 
