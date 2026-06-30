@@ -18,4 +18,7 @@
 
 [data]
     claudeCodeWrapper = "#{ promptStringOnce . "claudeCodeWrapper" "Claude Code wrapper path" }#"
+#{- if and (eq .chezmoi.os "darwin") (eq .chezmoi.username "cxcx") }#
+    corpHost = "#{ promptStringOnce . "corpHost" "Corp host for VPN connectivity check (blank to skip)" }#"
+#{- end }#
 #{- end }#

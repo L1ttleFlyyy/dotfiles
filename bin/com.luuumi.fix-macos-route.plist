@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
@@ -12,8 +11,8 @@
         <string>--auto</string>
     </array>
 
-    <!-- Pure polling. We tried the event-driven LaunchEvents +
-         com.apple.system.config.network_change hook, but that notification is
+    <!-- Pure polling. We tried the event-driven LaunchEvents + macOS
+         network-change notification hook, but that notification is
          not reliably delivered to a LaunchDaemon (Wi-Fi up/down, network switch,
          and Tailscale connect/disconnect did not wake the job), so it has been
          removed. The script is a silent no-op when healthy, so polling is cheap.

@@ -20,9 +20,6 @@ bin/
 
 {{- if ne .chezmoi.os "darwin" }}
 Library/
-bin/fix-macos-route
-bin/install-fix-macos-route-daemon
-bin/com.luuumi.fix-macos-route.plist
 {{- else}}
 .config/Code/
 {{- end }}
@@ -38,6 +35,11 @@ bin/com.luuumi.fix-macos-route.plist
 
 {{- if eq .chezmoi.username "cxcx" }}
 .claude
+{{- else}}
+bin/fix-macos-route
+bin/install-fix-macos-route-daemon
+bin/com.luuumi.fix-macos-route.plist
+bin/ts-vpn-diag
 {{- end }}
 
 {{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}

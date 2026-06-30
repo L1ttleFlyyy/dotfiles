@@ -1,0 +1,112 @@
+#!/bin/bash
+#
+# ts-vpn-diag — capture Tailscale / Work-VPN routing + DNS state for diagnosis.
+#
+# Run this WHEN AN INTERNAL WORK-VPN SITE IS UNREACHABLE (the broken state),
+# before toggling anything. Read-only: it snapshots the routing table, interface
+# roles, the 100.64/10 owner, DNS resolver config, and name resolution +
+# reachability for one corp host, into a timestamped file you can keep/share.
+#
+# Both VPNs share the 100.64/10 CGNAT range; the failure is when the global
+# 100.64/10 is owned by Tailscale (or nobody) instead of the Work VPN, so
+# Work-VPN CGNAT hosts blackhole. See fix-macos-route for the full write-up.
+#
+# Usage:
+#   ts-vpn-diag              capture only (safe, read-only)
+#   To APPLY the fix:        fix-macos-route
+#
+# The corp host for the resolution/reachability check comes from chezmoi data
+# (prompted at install). Override per-run:  CORP_HOST=host.example.com ts-vpn-diag
+
+CORP_HOST="${CORP_HOST:-{{ if hasKey . "corpHost" }}{{ .corpHost }}{{ end }}}"
+TAILSCALE_SUBNET="100.123.123"
+OUTDIR="$HOME/ts-vpn-diagnosis"
+
+mkdir -p "$OUTDIR"
+OUT="$OUTDIR/diag-$(date +%Y%m%d-%H%M%S).txt"
+
+# Tee everything to both the terminal and the capture file.
+exec > >(tee "$OUT") 2>&1
+
+section() { echo; echo "===== $* ====="; }
+run()     { echo "\$ $*"; eval "$@" 2>&1; echo; }
+
+echo "ts-vpn-diag  $(date '+%Y-%m-%d %H:%M:%S')"
+echo "capture file: $OUT"
+echo "corp host:    ${CORP_HOST:-<none configured>}"
+
+# --- Identify interface roles (utunN numbers shuffle across sleep/wake) ---
+section "Interface roles"
+TS_IFACE=""
+for i in $(ifconfig -l | tr ' ' '\n' | grep '^utun'); do
+    if ifconfig "$i" 2>/dev/null | grep -q "inet ${TAILSCALE_SUBNET}\."; then
+        TS_IFACE="$i"; break
+    fi
+done
+# Global 100.64/10 owner, plus the Work VPN = the OTHER utun holding a 100.64/10
+# route (keyed on CGNAT facts only — no site-specific signature).
+GLOBAL_IFACE=$(netstat -rn -f inet | awk '$1=="100.64/10" && $3 !~ /I/ {print $4; exit}')
+WORKVPN_IFACE=$(netstat -rn -f inet | awk -v ts="$TS_IFACE" '$1=="100.64/10" && $4!=ts {print $4; exit}')
+SLASH10_IFACE=$(netstat -rn -f inet | awk '$1=="100.64/10"{print $4; exit}')
+SLASH10_FLAGS=$(netstat -rn -f inet | awk '$1=="100.64/10"{print $3; exit}')
+echo "Tailscale interface (inet ${TAILSCALE_SUBNET}.x): ${TS_IFACE:-<none / down>}"
+echo "Work VPN interface (non-TS 100.64/10 owner):    ${WORKVPN_IFACE:-<none / down>}"
+echo "Global 100.64/10 owned by:                      ${GLOBAL_IFACE:-<none>}  (flags ${SLASH10_FLAGS:-none})"
+
+# --- Verdict: the global 100.64/10 must belong to the Work VPN ---
+section "100.64/10 ownership verdict"
+if [ -z "$SLASH10_IFACE" ]; then
+    echo "? No 100.64/10 route at all (both VPNs down?)."
+elif [ -z "$WORKVPN_IFACE" ]; then
+    echo "• Work VPN down (no non-Tailscale 100.64/10). Global owner='${GLOBAL_IFACE:-none}'."
+    echo "  No CGNAT contention — nothing for fix-macos-route to do."
+elif [ "$GLOBAL_IFACE" = "$WORKVPN_IFACE" ]; then
+    echo "✓ HEALTHY: the Work VPN ($WORKVPN_IFACE) owns the global 100.64/10."
+else
+    echo "✗ BROKEN: Work VPN ($WORKVPN_IFACE) is up but does NOT own the global 100.64/10"
+    echo "  (global owner='${GLOBAL_IFACE:-none}', flags='${SLASH10_FLAGS:-none}'; likely"
+    echo "  Tailscale grabbed it). Work-VPN CGNAT (100.74.x / 100.95.x) blackholes."
+    echo "  Fix:  fix-macos-route"
+fi
+
+# --- Raw routing evidence ---
+section "100.64/10 + CGNAT host routes (100.74.x / 100.95.x = Work VPN CGNAT)"
+run "netstat -rn -f inet | grep -E 'Destination|100\\.(64/10|74|95|100|123)'"
+
+section "Default routes (primary-service / scoping picture)"
+run "netstat -rn -f inet | awk 'NR<=2 || \$1==\"default\"'"
+
+# route get shows the ACTUAL interface the kernel would choose for a destination.
+section "route get — which interface would actually be used"
+run "route -n get 100.74.144.76"   # a Work-VPN CGNAT host seen in captures
+run "route -n get ${TAILSCALE_SUBNET}.8"
+
+# --- DNS: is the corp resolver reachable, and does the name resolve? ---
+section "DNS resolver configuration (look for the corp domain's resolver)"
+run "scutil --dns | grep -E 'resolver|nameserver|domain|if_index|flags' "
+
+if [ -n "$CORP_HOST" ]; then
+    section "Name resolution for $CORP_HOST"
+    run "dscacheutil -q host -a name $CORP_HOST"      # via the system resolver (what apps see)
+    run "dig +short +time=2 +tries=1 $CORP_HOST"      # direct (may differ from the system path)
+    RESOLVED_IP=$(dig +short +time=2 +tries=1 "$CORP_HOST" 2>/dev/null | grep -E '^[0-9]+\.' | head -1)
+    echo "resolved IP: ${RESOLVED_IP:-<resolution FAILED>}"
+    [ -n "$RESOLVED_IP" ] && run "route -n get $RESOLVED_IP"
+else
+    section "Name resolution"
+    echo "(no corp host configured — set CORP_HOST, or the chezmoi 'corpHost' data, to enable)"
+fi
+
+# --- Reachability: separate Tailscale vs Work VPN ---
+section "Reachability"
+run "ping -c1 -W2 ${TAILSCALE_SUBNET}.8   # a Tailscale peer"
+if [ -n "${RESOLVED_IP:-}" ]; then
+    run "nc -z -G 3 $RESOLVED_IP 443 && echo 'TCP 443 OPEN' || echo 'TCP 443 unreachable'"
+fi
+
+section "VPN service status"
+run "scutil --nc list"
+
+echo
+echo "Done. Capture saved to: $OUT"
+echo "If the verdict says BROKEN, run:  fix-macos-route"
