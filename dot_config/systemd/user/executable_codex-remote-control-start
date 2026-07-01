@@ -17,8 +17,9 @@ printf '%s\n' "$output" >&2
 case "$output" in
     *"app server is running but is not managed by codex app-server daemon"*)
         printf '%s\n' \
-            "codex-remote-control: unmanaged app-server is already running; leaving it untouched." >&2
-        exit 0
+            "codex-remote-control: unmanaged app-server is already running; remote-control is not healthy." \
+            "codex-remote-control: stop stale codex app-server proxy/notty sessions and bootstrap again." >&2
+        exit 70
         ;;
 esac
 
