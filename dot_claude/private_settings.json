@@ -1,4 +1,9 @@
 {
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "DO_NOT_TRACK": "1",
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
+  },
   "permissions": {
     "allow": [
       "WebSearch",
@@ -49,15 +54,10 @@
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
+  "autoMemoryEnabled": false,
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true,
-  "autoMemoryEnabled": false,
-  "env": {
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "DO_NOT_TRACK": "1",
-    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
-  }
+  "agentPushNotifEnabled": true
 }
