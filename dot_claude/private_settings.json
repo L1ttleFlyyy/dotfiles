@@ -41,6 +41,8 @@
       }
     ]
   },
+  "enableWorkflows": false,
+  "workflowKeywordTriggerEnabled": false,
   "statusLine": {
     "type": "command",
     "command": "bash ~/.config/claude/claude-statusline.sh"
@@ -49,9 +51,13 @@
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark-ansi",
-  "enableWorkflows": false,
-  "workflowKeywordTriggerEnabled": false,
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "autoMemoryEnabled": false,
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "DO_NOT_TRACK": "1",
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "false"
+  }
 }
