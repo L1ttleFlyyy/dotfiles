@@ -11,51 +11,40 @@ icon_folder=$'\xEF\x81\xBC'          # U+F07C  nf-fa-folder_open
 icon_worktree=$'\xEF\x84\xA6'        # U+F126  nf-fa-code_fork
 icon_ctx=$'\xF3\xB0\x8D\x9B'         # U+F035B nf-md-chip
 
-# Parse JSON input with single jq call using @sh for efficiency
+# Parse JSON input with single jq call using @sh for efficiency.
+# Model name and context usage come straight from Claude Code's official
+# statusline payload (docs: code.claude.com/docs/en/statusline). Git status is
+# NOT in the payload, so it stays script-computed further below.
 eval "$(cat | jq -r '
   @sh "cwd=\(.workspace.current_dir // "")",
-  @sh "model=\(.model.display_name // "")",
-  @sh "input_tokens=\(.context_window.current_usage.input_tokens // 0)",
-  @sh "cache_create=\(.context_window.current_usage.cache_creation_input_tokens // 0)",
-  @sh "cache_read=\(.context_window.current_usage.cache_read_input_tokens // 0)",
+  @sh "model_display=\(.model.display_name // "")",
+  @sh "ctx_used_tokens=\(.context_window.total_input_tokens // 0)",
   @sh "ctx_size=\(.context_window.context_window_size // 200000)",
+  @sh "ctx_pct=\(.context_window.used_percentage // 0)",
   @sh "worktree_name=\(.worktree.name // "")"
 ')"
 
-# Calculate context percentage using bash arithmetic
-total_tokens=$((input_tokens + cache_create + cache_read))
-if [ "$ctx_size" -gt 0 ]; then
-    ctx_int=$((total_tokens * 100 / ctx_size))
-else
-    ctx_int=0
-fi
+# Context percentage is pre-computed by Claude Code (.context_window.used_percentage).
+# Coerce to an integer for bar math (the field may be a float like 23.5).
+ctx_int=${ctx_pct%%.*}
+[ -z "$ctx_int" ] && ctx_int=0
 
-# --- Model (dynamic extraction: family + version + optional context tag) ---
-model_lc=$(printf '%s' "$model" | tr '[:upper:]' '[:lower:]')
-if   [[ "$model_lc" == *opus* ]];   then family="Opus"
-elif [[ "$model_lc" == *sonnet* ]]; then family="Sonnet"
-elif [[ "$model_lc" == *haiku* ]];  then family="Haiku"
-else family=""
-fi
+# --- Model (Claude Code's official display name) ---
+# Trim a trailing "(… context)" parenthetical — the context bar already shows
+# the window size, so "Opus 4.8 (1M context)" → "Opus 4.8".
+model_short="${model_display:-unknown}"
+model_short="${model_short%% (*context)}"
 
-if [ -n "$family" ]; then
-    version=$(printf '%s' "$model_lc" | grep -oE '[0-9]+[.-][0-9]+' | head -1 | tr '-' '.')
-    model_ctx=$(printf '%s' "$model" | grep -oiE '[0-9]+[km] context' | grep -oiE '[0-9]+[km]' | tr '[:lower:]' '[:upper:]')
-    model_short="${family}${version:+ $version}${model_ctx:+ (${model_ctx})}"
-else
-    model_short="${model:-unknown}"
-fi
-
-# --- Human-readable token count: 20000 → 20k, 1500000 → 1.5M ---
+# --- Human-readable token count: 20000 → 20k, 1500000 → 1.5M (pure bash) ---
 human_tokens() {
     local n=$1
-    if   [[ $n -ge 1000000 ]]; then printf "%.1fM" "$(echo "scale=1; $n/1000000" | bc)"
-    elif [[ $n -ge 1000 ]];    then printf "%dk"   $(( n / 1000 ))
-    else                             printf "%d"    "$n"
+    if   [[ $n -ge 1000000 ]]; then printf "%d.%dM" $(( n / 1000000 )) $(( (n % 1000000) / 100000 ))
+    elif [[ $n -ge 1000 ]];    then printf "%dk"    $(( n / 1000 ))
+    else                             printf "%d"     "$n"
     fi
 }
 
-used=$(human_tokens "$total_tokens")
+used=$(human_tokens "$ctx_used_tokens")
 limit=$(human_tokens "$ctx_size")
 
 # Progress bar: 10-char bar
@@ -79,7 +68,7 @@ ctx_display="\033[36m${icon_ctx}\033[0m ${ctx_color}${bar}\033[0m \033[36m${used
 
 # Debug mode: set DEBUG_STATUSLINE=1 to see raw values
 if [ "$DEBUG_STATUSLINE" = "1" ]; then
-    echo "DEBUG: input=$input_tokens cache_create=$cache_create cache_read=$cache_read total=$total_tokens size=$ctx_size" >&2
+    echo "DEBUG: used_tokens=$ctx_used_tokens size=$ctx_size pct=$ctx_pct" >&2
 fi
 
 # --- Directory (simplified p10k-style) ---
