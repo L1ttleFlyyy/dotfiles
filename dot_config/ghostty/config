@@ -11,7 +11,7 @@ shell-integration-features = no-cursor,sudo,title,ssh-env,no-ssh-terminfo,path
 theme = light:Gruvbox Material Light,dark:Catppuccin Macchiato
 
 # macOS: tab bar integrates with titlebar, theme follows terminal background
-macos-titlebar-style = tabs
+macos-titlebar-style = transparent
 window-theme = auto
 
 # macOS: left Option as Alt/Meta for word-movement keybinds
