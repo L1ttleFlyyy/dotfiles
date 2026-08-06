@@ -3,4 +3,18 @@
 {{- with .chezmoi.stdin -}}
 {{-   $data = . | fromJson -}}
 {{- end -}}
-{{ $data | setValueAtPath "env.ENABLE_CLAUDEAI_MCP_SERVERS" "false"| setValueAtPath "autoMemoryEnabled" false | setValueAtPath "enableWorkflows" false | setValueAtPath "workflowKeywordTriggerEnabled" false | setValueAtPath "skipDangerousModePermissionPrompt" true | setValueAtPath "remoteControlAtStartup" true | setValueAtPath "permissions.defaultMode" "auto" | setValueAtPath "statusLine.type" "command" | setValueAtPath "statusLine.command" "bash ~/.config/claude/claude-statusline.sh" | setValueAtPath "hooks.Notification" (list (dict "hooks" (list (dict "type" "command" "command" "~/.config/claude/tmux-notify.sh")))) | toPrettyJson }}
+{{ $data
+  | setValueAtPath "env.ENABLE_CLAUDEAI_MCP_SERVERS" "false"
+  | setValueAtPath "autoMemoryEnabled" false
+  | setValueAtPath "enableWorkflows" false
+  | setValueAtPath "workflowKeywordTriggerEnabled" false
+  | setValueAtPath "skipDangerousModePermissionPrompt" true
+  | setValueAtPath "remoteControlAtStartup" true
+  | setValueAtPath "permissions.defaultMode" "auto"
+  | setValueAtPath "tui" "fullscreen"
+  | setValueAtPath "attribution.commit" ""
+  | setValueAtPath "attribution.pr" ""
+  | setValueAtPath "statusLine.type" "command"
+  | setValueAtPath "statusLine.command" "bash ~/.config/claude/claude-statusline.sh"
+  | setValueAtPath "hooks.Notification" (list (dict "hooks" (list (dict "type" "command" "command" "~/.config/claude/tmux-notify.sh"))))
+  | toPrettyJson }}
