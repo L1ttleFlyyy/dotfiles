@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# sync-chezmoi-claude — reconcile chezmoi-managed ~/.claude files by hand.
+#
+# On this host ~/.claude is a symlink to another volume, so dot_claude/ is
+# excluded from `chezmoi apply` (see .chezmoiignore, gated on $SYNC_CLAUDE) to
+# stop chezmoi from replacing the symlink with a real directory. This script
+# renders each managed target with `chezmoi cat` — setting SYNC_CLAUDE to lift
+# that guard — and lets you review/apply each difference one file at a time.
+#
+# For every managed file under ~/.claude:
+#   - render the chezmoi target (handles .tmpl and modify_ correctly),
+#   - if it matches the file on disk, move on,
+#   - otherwise prompt: [a]pply / [s]kip / [d]iff  (default: skip).
+# "apply" writes through the symlink to the real file; the diff tool is nvim -d.
+
+set -euo pipefail
+
+# Lift the .chezmoiignore guard so chezmoi will render the .claude targets.
+export SYNC_CLAUDE=1
+
+DIFFTOOL=(nvim -d)
+CLAUDE_DIR="${HOME}/.claude"
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+mapfile -t targets < <(chezmoi managed --include=files --path-style=absolute "$CLAUDE_DIR")
+
+if ((${#targets[@]} == 0)); then
+  echo "No chezmoi-managed files found under $CLAUDE_DIR."
+  echo "(Check that the SYNC_CLAUDE guard exists in .chezmoiignore.)"
+  exit 0
+fi
+
+insync=0 applied=0 skipped=0 changed=0
+
+for target in "${targets[@]}"; do
+  rel="${target#"$HOME"/}"
+  rendered="$tmp/$rel"
+  mkdir -p "$(dirname "$rendered")"
+
+  if ! chezmoi cat "$target" >"$rendered" 2>"$tmp/err"; then
+    echo "!! failed to render $rel:"
+    sed 's/^/   /' "$tmp/err"
+    continue
+  fi
+
+  if [[ -f "$target" ]] && cmp -s "$rendered" "$target"; then
+    insync=$((insync + 1))
+    printf '   in sync: %s\n' "$rel"
+    continue
+  fi
+
+  changed=$((changed + 1))
+  if [[ -e "$target" ]]; then
+    printf '\n>> %s differs from the chezmoi source\n' "$rel"
+  else
+    printf '\n>> %s does not exist yet\n' "$rel"
+  fi
+
+  while true; do
+    printf '   [a]pply / [s]kip / [d]iff (default: skip)? '
+    read -r ans </dev/tty || ans=""
+    case "${ans:-s}" in
+      a | A)
+        mkdir -p "$(dirname "$target")"
+        cp "$rendered" "$target"
+        printf '   applied: %s\n' "$rel"
+        applied=$((applied + 1))
+        break
+        ;;
+      d | D)
+        "${DIFFTOOL[@]}" "$rendered" "$target" </dev/tty >/dev/tty 2>&1 || true
+        ;;
+      s | S | "")
+        printf '   skipped: %s\n' "$rel"
+        skipped=$((skipped + 1))
+        break
+        ;;
+      *)
+        printf '   ? enter a, s, or d\n'
+        ;;
+    esac
+  done
+done
+
+printf '\nDone: %d in sync, %d changed (%d applied, %d skipped).\n' \
+  "$insync" "$changed" "$applied" "$skipped"

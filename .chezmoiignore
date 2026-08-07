@@ -42,4 +42,12 @@ bin/ts-vpn-diag
 
 {{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
 .config/Code/
+{{-   if not (env "SYNC_CLAUDE") }}
+# ~/.claude is a symlink to another volume on this host. Excluding it keeps
+# `chezmoi apply` from clobbering the symlink with a real directory. Reconcile
+# its contents by hand with `sync-chezmoi-claude`, which sets SYNC_CLAUDE=1 to
+# lift this guard so the managed targets can be rendered with `chezmoi cat`.
+.claude
+.claude/**
+{{-   end }}
 {{- end }}
