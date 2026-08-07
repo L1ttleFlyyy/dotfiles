@@ -21,13 +21,31 @@ tmux owns theme state for each tmux server.
 
 - `client-light-theme` and `client-dark-theme` hooks receive outer terminal
   theme changes.
-- `client-attached` and `client-active` initialize/sync from `#{client_theme}`.
-- `@client_theme_current` stores the current server-local theme.
-- `window-style` and `window-active-style` are set to the selected theme
-  background, so applications inside tmux can consume tmux's OSC 11 response.
+- `client-attached` initializes from `#{client_theme}`, covering a client that
+  was absent while the theme flipped.
+- `@client_theme_current` stores the current server-local theme. Each hook tests
+  it and sets it in the same tmux command queue, so the test-and-set is atomic
+  and overlapping events cannot both kick off a re-source.
+- There is deliberately no `client-active` hook. The light/dark notification is
+  pushed by the terminal (DEC mode 2031) whether or not it is focused, so focus
+  changes carry no new information — they only produced bursts of concurrent
+  re-sources, which raced inside tpm and surfaced as `tpm returned 1`.
 
 This avoids background OSC probes from tmux jobs. `#(...)` status jobs have no
 interactive tty, so they cannot reliably ask the outer terminal via OSC 11.
+
+### Unresolved: pane background vs. OSC 11 proxying
+
+`window-style` and `window-active-style` were originally set to the selected
+theme background, so that applications inside tmux could read the theme back out
+of tmux's OSC 11 response. They are now unconditionally `bg=default`, so panes
+inherit the outer terminal background instead — this is what keeps a transparent
+nvim and blank shell space seamless when the host terminal's theme is neither
+catppuccin nor gruvbox.
+
+These two goals conflict, and the second one won without the first being
+re-checked. Whether tmux still answers OSC 11 usefully with `bg=default` has not
+been verified. If nvim inside tmux stops following the theme, look here first.
 
 ### nvim
 
@@ -57,9 +75,8 @@ Reads Windows app theme directly with `Get-WindowsAppsTheme` at startup.
 ```
 Terminal/client theme changes
     |
-    +-- tmux client_theme hooks --> set @client_theme_current
-    |                              reload tmux theme in this server
-    |                              set tmux pane background
+    +-- tmux client_theme hooks --> set @client_theme_current (atomic)
+    |                              re-source tmux.conf in this server
     |
     +-- nvim OSC 11 query --------> terminal or tmux response
                                    apply colorscheme

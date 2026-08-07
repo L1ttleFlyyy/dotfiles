@@ -117,11 +117,13 @@ Automatic selection based on OSC 11 terminal background queries:
 - anything else -> catppuccin macchiato (dark background)
 
 nvim queries the terminal on startup/focus/resume. Inside tmux 3.6+, tmux
-responds from its pane background, which is synced from `#{client_theme}`.
-Startup uses a short synchronous OSC 11 query before the first colorscheme is
-applied, so light terminals do not render a dark fallback first unless the
-terminal response misses that startup window.
-See `dot_config/colortheme/README.md` for the full architecture.
+responds from its pane background. Startup uses a short synchronous OSC 11 query
+before the first colorscheme is applied, so light terminals do not render a dark
+fallback first unless the terminal response misses that startup window.
+
+See [`docs/theme-architecture.md`](../docs/theme-architecture.md) for the full
+architecture, including why there is no shared statefile and an open question
+about what tmux reports for OSC 11 now that `window-style` is `bg=default`.
 
 ## Platform-Specific Features (RHEL)
 

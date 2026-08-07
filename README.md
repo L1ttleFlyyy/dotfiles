@@ -17,11 +17,16 @@ CLIs.
   — getting desktop notifications out of a sandboxed Claude Code running inside
   tmux on a remote host, via tmux passthrough plus Ghostty OSC 777, including the
   approaches that turned out to be dead ends.
+- [`docs/theme-architecture.md`](docs/theme-architecture.md) — how the light/dark
+  theme propagates across tmux, Neovim, zsh and PowerShell without a shared
+  statefile, and the constraints that rule out the obvious alternatives (OSC 11
+  passthrough responses do not route back to the originating pane; tmux status
+  jobs have no tty to probe with).
 - [`AGENTS.md`](AGENTS.md) — instructions for coding agents working in this
   repository. `CLAUDE.md` is a pointer to it.
 
-The first two are worth reading before touching the area they describe; both
-exist because the obvious approach failed at least once.
+The first three are worth reading before touching the area they describe; each
+exists because the obvious approach failed at least once.
 
 ## Codex configuration
 

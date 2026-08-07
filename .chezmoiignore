@@ -3,7 +3,7 @@ LICENSE
 README.md
 AGENTS.md
 CLAUDE.md
-.config/colortheme/README.md
+docs/
 
 {{- if ne .chezmoi.os "windows" }}
 .chezmoiscripts/**
