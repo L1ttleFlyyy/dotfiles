@@ -1,4 +1,27 @@
-# Chezmoi Notes
+# Dotfiles
+
+Personal dotfiles managed by [chezmoi](https://chezmoi.io/): a single source tree
+covering macOS, Linux (Fedora / Bazzite / RHEL) and Windows, with platform
+differences handled by chezmoi templates rather than by separate branches.
+
+Covers zsh, Neovim, tmux, Ghostty / WezTerm, git, and the Claude Code and Codex
+CLIs.
+
+## Documentation
+
+- [`.chezmoitemplates/README.md`](.chezmoitemplates/README.md) — the Neovim
+  configuration: design principles, plugin list, key mappings, and a `Gotchas`
+  section recording upstream bugs worked around here (e.g. mini.animate breaking
+  `<`/`>` reselection in visual mode).
+- [`dot_config/claude/claude-notification-tips.md`](dot_config/claude/claude-notification-tips.md)
+  — getting desktop notifications out of a sandboxed Claude Code running inside
+  tmux on a remote host, via tmux passthrough plus Ghostty OSC 777, including the
+  approaches that turned out to be dead ends.
+- [`AGENTS.md`](AGENTS.md) — instructions for coding agents working in this
+  repository. `CLAUDE.md` is a pointer to it.
+
+The first two are worth reading before touching the area they describe; both
+exist because the obvious approach failed at least once.
 
 ## Codex configuration
 
@@ -27,13 +50,15 @@ rest at runtime.
 
 ## Comparing changes
 
-Agents must not run `chezmoi diff`: it launches an interactive Neovim session.
-Pipe `chezmoi cat` into the system `diff` instead:
+`diff.command` is set to `nvim`, so a bare `chezmoi diff` opens an interactive
+Neovim session — fine by hand, fatal in a script or an agent. The non-interactive
+equivalent, which behaves like `git diff`, is:
 
 ```sh
-chezmoi cat ~/.codex/config.toml | diff -u ~/.codex/config.toml -
+chezmoi diff --use-builtin-diff --no-pager --no-tty [target...]
 ```
 
-Use `diff -q` instead of `diff -u` when only the exit status matters.
+See [`AGENTS.md`](AGENTS.md) for why this matters more than an ordinary hang.
 
-This README is excluded from the target state by `.chezmoiignore`.
+`README.md`, `AGENTS.md` and `CLAUDE.md` are excluded from the target state by
+`.chezmoiignore`.
