@@ -10,27 +10,8 @@ case "$theme" in
     *) exit 0 ;;
 esac
 
-case "$theme" in
-    light)
-        flavor=gruvbox
-        bg="#fbf1c7"
-        ;;
-    dark)
-        flavor=macchiato
-        bg="#24273a"
-        ;;
-esac
-
-current_theme=$(tmux show-option -gv @client_theme_current 2>/dev/null || true)
-current_flavor=$(tmux show-option -gv @catppuccin_flavor 2>/dev/null || true)
-current_style=$(tmux show-option -gv window-style 2>/dev/null || true)
-
-if [ "$current_theme" = "$theme" ] &&
-   [ "$current_flavor" = "$flavor" ] &&
-   [ "$current_style" = "bg=$bg" ]; then
-    exit 0
-fi
-
+# Deduplication lives in the tmux hooks (see tmux.conf), where the test and the
+# set are atomic. Setting it here too keeps manual invocation working.
 tmux set -g @client_theme_current "$theme"
 
 # catppuccin uses set -o for defaults, so old generated theme values must be
