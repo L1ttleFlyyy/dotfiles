@@ -3,6 +3,22 @@
 {{- with .chezmoi.stdin -}}
 {{-   $data = . | fromJson -}}
 {{- end -}}
+
+{{- /* Keep machine-local Notification hooks; only ensure ours is present. */ -}}
+{{- $notifyCmd := "~/.config/claude/tmux-notify.sh" -}}
+{{- $notify := list (dict "hooks" (list (dict "type" "command" "command" $notifyCmd))) -}}
+{{- range (dig "hooks" "Notification" (list) $data) -}}
+{{-   $isOurs := false -}}
+{{-   range (dig "hooks" (list) .) -}}
+{{-     if contains ".config/claude/tmux-notify.sh" (dig "command" "" .) -}}
+{{-       $isOurs = true -}}
+{{-     end -}}
+{{-   end -}}
+{{-   if not $isOurs -}}
+{{-     $notify = append $notify . -}}
+{{-   end -}}
+{{- end -}}
+
 {{ $data
   | setValueAtPath "env.ENABLE_CLAUDEAI_MCP_SERVERS" "false"
   | setValueAtPath "autoMemoryEnabled" false
@@ -16,5 +32,5 @@
   | setValueAtPath "attribution.pr" ""
   | setValueAtPath "statusLine.type" "command"
   | setValueAtPath "statusLine.command" "bash ~/.config/claude/claude-statusline.sh"
-  | setValueAtPath "hooks.Notification" (list (dict "hooks" (list (dict "type" "command" "command" "~/.config/claude/tmux-notify.sh"))))
+  | setValueAtPath "hooks.Notification" $notify
   | toPrettyJson }}
