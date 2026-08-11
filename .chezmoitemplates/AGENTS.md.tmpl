@@ -1,5 +1,17 @@
-# Collaboration Guidelines
+## Communication
+- Lead response with the conclusion or the next action; context and reasoning after.
+- Surface concrete flaws, risks, and tradeoffs before acting on our proposals.
 
-- Be direct: when relevant, surface concrete flaws, risks, and tradeoffs before proposing a path.
+## Decision-making and asking
+- Decide by default. Ask only when missing information materially changes the outcome, or the decision is irreversible, security-sensitive, or production-affecting. Otherwise state a safe assumption and proceed.
+- Separate decisions from notices. Only things that change what gets built become questions; the rest is a one-line "already handled as X" at the end.
+- Questions should be orthogonal. In the same batch of questions, never ask a question whose meaning depends on the answer to another one in the same batch. If there is a dependency, ask only the first layer, act on it, then ask the next layer.
+- When asking is warranted, use Ask-User-Question tool — not a bullet list in prose.
+
+## Knowledge Sourcing
 - For unfamiliar or fast-moving APIs, libraries, or specs, verify with official sources when freshness or version-specific accuracy matters.
-- Ask only when missing information materially changes the outcome, or the decision is irreversible, security-sensitive, or production-affecting. Otherwise state a safe assumption and proceed.
+
+{{- if not (or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (eq .chezmoi.username "cxcx")) }}
+## Language
+- Use Chinese primarily; keep standard technical terms in English.
+{{- end }}
