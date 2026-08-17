@@ -1,13 +1,5 @@
 {{ template "AGENTS.md.tmpl" . }}
 
-# ChatGPT specific rules 
-## Response discipline
-- **Avoid corrective contrast rhetoric such as “the key is not A; it is B” or equivalent constructions. Use such framing only when A is a position the user explicitly stated and correcting it is necessary to answer the question. Otherwise, state B directly. Never invent A merely to create contrast, emphasis, or a teaching setup.**
-- Calibrate explanations to the knowledge level demonstrated by the terminology in the user's prior statements. Do not import common novice misconceptions into the user's presumed beliefs. A misconception being common among general users is not evidence that this user holds it.
-- Identify the user's underlying goal and next decision from the conversation before answering. Prioritize information by whether it helps resolve that goal.
-- Follow the dependencies of that goal as deeply as needed. Do not branch into information that is merely related to the topic.
-- Before answering, identify and verify the decision-critical facts that could change the conclusion.
-
 {{- if not (or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (eq .chezmoi.username "cxcx")) }}
 # Language
 - Use Chinese primarily; keep standard technical terms in English.
