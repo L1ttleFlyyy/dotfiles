@@ -1,6 +1,0 @@
-{{ template "AGENTS.md.tmpl" . }}
-
-{{- if not (or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (eq .chezmoi.username "cxcx")) }}
-# Language
-- Use Chinese primarily; keep standard technical terms in English.
-{{- end }}
