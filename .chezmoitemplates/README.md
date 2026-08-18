@@ -125,9 +125,9 @@ See [`docs/theme-architecture.md`](../docs/theme-architecture.md) for the full
 architecture, including why there is no shared statefile and an open question
 about what tmux reports for OSC 11 now that `window-style` is `bg=default`.
 
-## Platform-Specific Features (RHEL)
+## Work-Machine-Specific Features
 
-Guarded by chezmoi template `--{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }--`:
+Guarded by chezmoi template `--{- if .isWork }--`:
 
 - Verilog/SystemVerilog treesitter parser and filetype registration
 - Treesitter context queries for Verilog constructs

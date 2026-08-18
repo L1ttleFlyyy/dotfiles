@@ -1,3 +1,6 @@
+{{- /* Deliberately does not share .chezmoitemplates/ignore.tmpl with fd/git:
+       that partial holds repo-scoped rules (.git/, __pycache__/, build output),
+       which are wrong for a global ~/.ignore. This file is home-scoped only. */ -}}
 .local/share/
 .local/state/
 .var/
@@ -10,7 +13,7 @@
 Library/
 Perforce/
 
-{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+{{- if .isWork }}
 homebrew/
 .snapshot/
 .ansys/

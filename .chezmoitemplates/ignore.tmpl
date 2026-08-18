@@ -23,7 +23,7 @@ __pycache__/
 
 **/.claude/settings.local.json
 
-{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+{{- if .isWork }}
 ####### personal
 vnc_logs/
 amx/

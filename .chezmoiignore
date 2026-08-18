@@ -35,14 +35,14 @@ Library/
 .config/environment.d/
 {{- end }}
 
-{{- if ne .chezmoi.username "cxcx" }}
+{{- if not (and (eq .chezmoi.os "darwin") .isWork) }}
 bin/fix-macos-route
 bin/install-fix-macos-route-daemon
 bin/com.luuumi.fix-macos-route.plist
 bin/ts-vpn-diag
 {{- end }}
 
-{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+{{- if .isWork }}
 .config/Code/
 {{-   if not (env "SYNC_CLAUDE") }}
 # ~/.claude is a symlink to another volume on this host. Excluding it keeps

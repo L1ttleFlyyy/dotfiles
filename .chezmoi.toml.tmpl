@@ -1,5 +1,6 @@
 # vim: ft=toml
 # chezmoi:template:left-delimiter=#{ right-delimiter=}#
+#{- $isWork := or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (eq .chezmoi.username "cxcx") }#
 [edit]
     apply = false
 [diff]
@@ -14,11 +15,14 @@
     args = ["-NoLogo", "-NoProfile"]
 #{- end }#
 
-#{- if or (and (eq .chezmoi.os "darwin") (eq .chezmoi.username "cxcx")) (eq (dig "id" "none" .chezmoi.osRelease) "rhel") }#
 
 [data]
+    # Work machine. Evaluated at `chezmoi init` time, not per-apply, so re-run
+    # init if the config predates this key or `.isWork` will be undefined.
+    isWork = #{ $isWork }#
+#{- if $isWork }#
     claudeCodeWrapper = "#{ promptStringOnce . "claudeCodeWrapper" "Claude Code wrapper path" }#"
-#{- if and (eq .chezmoi.os "darwin") (eq .chezmoi.username "cxcx") }#
+#{- if and (eq .chezmoi.os "darwin") $isWork }#
     corpHost = "#{ promptStringOnce . "corpHost" "Corp host for VPN connectivity check (blank to skip)" }#"
 #{- end }#
 #{- end }#

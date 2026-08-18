@@ -9,7 +9,7 @@ message=$(echo "$input" | jq -r '.message // "Claude Code"')
 # DCS passthrough wrapping: \ePtmux;\e<OSC 777 payload>\e\\
 # tmux intercepts the DCS envelope and forwards the inner OSC 777 to the
 # outer terminal, which renders the desktop notification.
-{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+{{- if .isWork }}
 #
 # Why not just `printf ... > /dev/tty`?
 #   1. The hook subprocess has no controlling terminal, so /dev/tty doesn't exist.

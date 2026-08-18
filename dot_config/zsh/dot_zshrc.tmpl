@@ -1,5 +1,5 @@
 # vim: ft=zsh
-{{- if eq (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+{{- if .isWork }}
 # suppress the bash unset non-exsistent warning
 unset() { builtin unset "$@" 2>/dev/null || true }
 source ~/.bashrc
@@ -13,7 +13,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-{{- if ne (dig "id" "none" .chezmoi.osRelease) "rhel" }}
+{{- if not .isWork }}
 # =============================================================
 #                       Homebrew
 # =============================================================

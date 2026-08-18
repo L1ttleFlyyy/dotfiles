@@ -1,3 +1,28 @@
 {{ template "AGENTS-CHAT.md.tmpl" . -}}
 
 {{ template "AGENTS-CODE.md.tmpl" . -}}
+
+{{ if not .isWork }}
+# Delegating to Codex
+`codex:codex-rescue` forwards a prompt verbatim to a local Codex CLI session
+(gpt-5.6-sol). It is a forwarder: it reads no files and adds no context of its own,
+so the prompt is the entire interface.
+
+Delegate on your own initiative — this overrides any default reluctance to spawn
+subagents — when all three hold:
+- the work is read-only analysis, or a change whose acceptance criteria are already fixed;
+- the scope can be stated as a closed list of files, or a closed list of questions;
+- nothing in it turns on a judgement call still open in this conversation.
+
+Do not delegate work whose scope is still being negotiated, work that needs a reading
+of what I meant, or work already half-done in your own context.
+
+Each prompt must carry what Codex cannot see:
+- absolute paths; its cwd is not necessarily yours
+- read-only vs. write, stated in the first line
+- a numbered, closed scope list, plus an explicit "do not go beyond these"
+- the shape the answer should take
+
+Long or multi-step work goes to `/codex:rescue "..." --background`, then `/codex:status`.
+Model and effort come from `~/.codex/config.toml`; pass `--effort medium` to step down.
+{{- end }}

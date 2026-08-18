@@ -19,6 +19,14 @@
 {{-   end -}}
 {{- end -}}
 
+{{- /* Codex CLI plugin: personal machines only — it ships code to OpenAI. */ -}}
+{{- if not .isWork -}}
+{{-   $data = $data
+        | setValueAtPath "enabledPlugins.codex@openai-codex" true
+        | setValueAtPath "extraKnownMarketplaces.openai-codex.source.source" "github"
+        | setValueAtPath "extraKnownMarketplaces.openai-codex.source.repo" "openai/codex-plugin-cc" -}}
+{{- end }}
+
 {{ $data
   | setValueAtPath "env.ENABLE_CLAUDEAI_MCP_SERVERS" "false"
   | setValueAtPath "autoMemoryEnabled" false
