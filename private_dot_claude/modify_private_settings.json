@@ -32,6 +32,7 @@
   | setValueAtPath "autoMemoryEnabled" false
   | setValueAtPath "enableWorkflows" false
   | setValueAtPath "workflowKeywordTriggerEnabled" false
+  | setValueAtPath "awaySummaryEnabled" false
   | setValueAtPath "skipDangerousModePermissionPrompt" true
   | setValueAtPath "remoteControlAtStartup" true
   | setValueAtPath "permissions.defaultMode" "auto"
