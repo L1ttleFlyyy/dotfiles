@@ -22,10 +22,13 @@ CLIs.
   statefile, and the constraints that rule out the obvious alternatives (OSC 11
   passthrough responses do not route back to the originating pane; tmux status
   jobs have no tty to probe with).
+- [`docs/search-ignore-layers.md`](docs/search-ignore-layers.md) — which of the
+  four ignore files `fd`, `rg` and `git` each read, why `~/.ignore` only takes
+  effect when the search starts at `$HOME`, and what belongs in which layer.
 - [`AGENTS.md`](AGENTS.md) — instructions for coding agents working in this
   repository. `CLAUDE.md` is a pointer to it.
 
-The first three are worth reading before touching the area they describe; each
+The first four are worth reading before touching the area they describe; each
 exists because the obvious approach failed at least once.
 
 ## Codex configuration

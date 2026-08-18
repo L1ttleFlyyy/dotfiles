@@ -1,24 +1,16 @@
-{{- /* Deliberately does not share .chezmoitemplates/ignore.tmpl with fd/git:
-       that partial holds repo-scoped rules (.git/, __pycache__/, build output),
-       which are wrong for a global ~/.ignore. This file is home-scoped only. */ -}}
-.local/share/
-.local/state/
-.var/
-.vim/
-.dbus/
-.vnc/
-.cache/
-.mozilla/
-.vscode-server/
-Library/
-Perforce/
+{{- /* ~/.ignore is read by fd and rg, but only when the search starts at $HOME
+       or above: the entries below contain a slash, so gitignore semantics
+       anchor them here. Searching from inside one of these directories still
+       works, which is the intended escape hatch — see README.
 
-{{- if .isWork }}
-homebrew/
-.snapshot/
-.ansys/
-.icons/
-.themes/
-.thumbnails/
-*.com.db
-{{- end }}
+       Keep this list minimal and evidence-based. An entry earns its place only
+       by being both index-heavy and certain to hold nothing worth searching;
+       anything else belongs nowhere, because a rule that hides what you were
+       looking for costs far more than the noise it saves. `ignore-audit`
+       reports current candidates. Generated artifacts and VCS metadata go in
+       .chezmoitemplates/ignore.tmpl instead, which applies globally. */ -}}
+.npm/
+.local/share/containers/
+.claude/remote/
+.codex/.tmp/
+.vscode-server/cli/servers/

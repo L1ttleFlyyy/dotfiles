@@ -1,3 +1,12 @@
+{{- /* Rendered into both ~/.config/fd/ignore and ~/.config/git/ignore.
+       The fd copy is also pulled into rg via --ignore-file in ripgreprc, so
+       these rules apply to fd, rg and git alike, from any directory — unlike
+       ~/.ignore, which only bites when the search starts at $HOME.
+
+       Scope: generated artifacts and VCS metadata, i.e. things unwanted both
+       when committing and when searching. Bulky home directories that are
+       merely uninteresting go in dot_ignore.tmpl instead, so that searching
+       from inside them still works. */ -}}
 .git/
 
 .cache/

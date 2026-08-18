@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# ignore-audit - show which directories dominate fd/fzf results.
+#
+# Counts only the files fd actually returns, i.e. after ~/.ignore,
+# ~/.config/fd/ignore and any .gitignore have applied. Everything printed is
+# therefore noise you are currently paying for in fzf's ctrl-t and alt-c.
+#
+# Entries here are *candidates* for dot_ignore.tmpl, not conclusions: add one
+# only if it is also certain to hold nothing worth searching. Prefer the
+# narrowest path that captures the bulk - .local/share/containers/ rather than
+# .local/share/, which would also hide this repository.
+set -uo pipefail
+
+root=${1:-$HOME}
+min=${2:-3000}
+maxdepth=${3:-3}
+
+count() { fd --type file --follow --hidden . "$1" 2>/dev/null | wc -l; }
+
+walk() {
+    local dir=$1 level=$2 child n
+    ((level > maxdepth)) && return
+    while IFS= read -r child; do
+        n=$(count "$child")
+        ((n < min)) && continue
+        printf '%9d  %*s%s\n' "$n" $((2 * level - 2)) '' "${child#"$root"/}"
+        walk "$child" $((level + 1))
+    done < <(fd --max-depth 1 --type dir --hidden --absolute-path . "$dir" 2>/dev/null)
+}
+
+printf 'Visible files under %s (threshold %s, depth %s)\n\n' "$root" "$min" "$maxdepth"
+printf '%9d  (total)\n' "$(count "$root")"
+walk "$root" 1

@@ -45,5 +45,11 @@ copy-ghostty-terminfo-su() {
 #   crc [name] [extra claude flags...]
 crc() { claude remote-control --name "${1:-${PWD:t}}" "${@:2}" }
 
+# Escape hatch for the ignore layers (~/.ignore, ~/.config/fd/ignore,
+# .gitignore). Reach for these when a search comes back empty and you are not
+# sure whether the file is missing or merely filtered.
+alias fda='fd --no-ignore --hidden'
+alias rga='rg --no-ignore --hidden'
+
 # additional user aliases
 [[ -r "${ZDOTDIR}/alias.local" ]] && source "${ZDOTDIR}/alias.local"
