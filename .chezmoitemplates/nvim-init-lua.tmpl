@@ -282,7 +282,7 @@ require("lazy").setup(
             cond = has_treesitter,
             build = ":TSUpdate",
             config = function()
---{- if .isWork }--
+--{- if .isWorkLinux }--
                 vim.api.nvim_create_autocmd('User', { pattern = 'TSUpdate',
                     callback = function()
                         require('nvim-treesitter.parsers').systemverilog = {
@@ -299,7 +299,7 @@ require("lazy").setup(
                     "lua", "vim", "vimdoc", "c", "cpp",
                     "python", "perl", "json", "yaml", "toml",
                     "bash", "markdown", "markdown_inline",
---{- if .isWork }--
+--{- if .isWorkLinux }--
                     "systemverilog",
 --{- end }--
                 })
@@ -360,7 +360,7 @@ require("lazy").setup(
             version = "v2.*",
             dependencies = {
                 "rafamadriz/friendly-snippets",
---{- if .isWork }--
+--{- if .isWorkLinux }--
                 "gvekony/sv-1800-2012",
 --{- end }--
             },
@@ -519,7 +519,7 @@ require("lazy").setup(
             cond = has_treesitter,
             config = function()
                 require("treesitter-context").setup({ max_lines = 3, })
---{- if .isWork }--
+--{- if .isWorkLinux }--
                 vim.treesitter.query.set("systemverilog", "context", [[
                     (module_declaration) @context
                     (always_construct) @context
@@ -542,7 +542,7 @@ require("lazy").setup(
             event = { "BufReadPre", "BufNewFile" },
             config = function()
                 local diff = require("mini.diff")
---{- if .isWork }--
+--{- if .isWorkLinux }--
                 -- Perforce diff source: compare buffer against depot version
                 local function gen_source_p4()
                 local function set_ref(buf_id, on_fail)
@@ -580,7 +580,7 @@ require("lazy").setup(
                 diff.setup({
                     source = {
                         diff.gen_source.git(),
---{- if .isWork }--
+--{- if .isWorkLinux }--
                         gen_source_p4(),
 --{- end }--
                         diff.gen_source.save(),

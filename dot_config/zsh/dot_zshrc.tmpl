@@ -1,5 +1,5 @@
 # vim: ft=zsh
-{{- if .isWork }}
+{{- if .isWorkLinux }}
 # suppress the bash unset non-exsistent warning
 unset() { builtin unset "$@" 2>/dev/null || true }
 source ~/.bashrc
@@ -13,7 +13,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-{{- if not .isWork }}
+{{- if not .isWorkLinux }}
 # =============================================================
 #                       Homebrew
 # =============================================================

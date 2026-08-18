@@ -127,7 +127,8 @@ about what tmux reports for OSC 11 now that `window-style` is `bg=default`.
 
 ## Work-Machine-Specific Features
 
-Guarded by chezmoi template `--{- if .isWork }--`:
+Guarded by chezmoi template `--{- if .isWorkLinux }--` — these all depend on
+tooling that only exists on the work Linux host:
 
 - Verilog/SystemVerilog treesitter parser and filetype registration
 - Treesitter context queries for Verilog constructs

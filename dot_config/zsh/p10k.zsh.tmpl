@@ -34,7 +34,7 @@
   typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
     # =========================[ Line #1 ]=========================
     os_icon                 # os identifier
-{{- if .isWork }}
+{{- if .isWorkLinux }}
     mywork
 {{- end }}
     dir                     # current directory
@@ -918,7 +918,7 @@
   typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE='%B%n@%m'
   
   # Context format when in SSH without privileges: user@hostname.
-{{- if .isWork }}
+{{- if .isWorkLinux }}
   typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_TEMPLATE=
 {{- else }}
   typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_TEMPLATE='%m'
@@ -1669,7 +1669,7 @@
     p10k segment -f 2 -i '⭐' -t 'hello, %n'
   }
 
-{{- if .isWork }}
+{{- if .isWorkLinux }}
   function prompt_mywork() {
     local mystate=$(seg-prompt project engine)
     p10k segment -t "${mystate}"

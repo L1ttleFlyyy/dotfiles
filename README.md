@@ -31,6 +31,28 @@ CLIs.
 The first four are worth reading before touching the area they describe; each
 exists because the obvious approach failed at least once.
 
+## Machine flags
+
+Machine identity is decided once, at `chezmoi init`, by `.chezmoi.toml.tmpl`, and
+written into `~/.config/chezmoi/chezmoi.toml` as three booleans:
+
+| Key | True when |
+|-----|-----------|
+| `.isWorkMac` | macOS and the username is the corp one |
+| `.isWorkLinux` | Linux and `/etc/os-release` says `rhel` |
+| `.isWork` | either of the above |
+
+Templates gate on these rather than re-deriving the condition, so the detection
+logic lives in exactly one place. Pick the narrowest flag that is true of the
+thing being gated: `.isWorkLinux` for the RHEL toolchain (SystemVerilog,
+Perforce, the bash-sourcing zsh startup path), `.isWorkMac` for corp-VPN
+plumbing under `bin/`, and `.isWork` for policy that applies to work as such —
+no Codex plugin, no personal git identity, English-only agent instructions.
+
+Because the keys are captured at init time, a config that predates one of them
+leaves it undefined and every template referencing it fails to render. Re-run
+`chezmoi init` after adding a flag.
+
 ## Codex configuration
 
 `dot_codex/modify_config.toml` manages a small policy set in

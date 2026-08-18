@@ -41,7 +41,7 @@ export LC_ALL="en_US.UTF-8"
 # eget config
 export EGET_CONFIG="$HOME/.config/eget/config.toml"
 
-{{- if and (eq .chezmoi.os "linux") (not .isWork) }}
+{{- if and (eq .chezmoi.os "linux") (not .isWorkLinux) }}
 # Java
 [ -s "/home/linuxbrew/.linuxbrew/opt/jabba/jabba.sh" ] && \
     . "/home/linuxbrew/.linuxbrew/opt/jabba/jabba.sh"  && \

@@ -1,6 +1,8 @@
 # vim: ft=toml
 # chezmoi:template:left-delimiter=#{ right-delimiter=}#
-#{- $isWork := or (eq (dig "id" "none" .chezmoi.osRelease) "rhel") (eq .chezmoi.username "cxcx") }#
+#{- $isWorkMac := and (eq .chezmoi.os "darwin") (eq .chezmoi.username "cxcx")}#
+#{- $isWorkLinux := and (eq .chezmoi.os "linux") (eq (dig "id" "none" .chezmoi.osRelease) "rhel")}#
+#{- $isWork := or $isWorkMac $isWorkLinux }#
 [edit]
     apply = false
 [diff]
@@ -17,12 +19,15 @@
 
 
 [data]
-    # Work machine. Evaluated at `chezmoi init` time, not per-apply, so re-run
-    # init if the config predates this key or `.isWork` will be undefined.
+    # Machine class. Evaluated at `chezmoi init` time, not per-apply, so re-run
+    # init if the config predates these keys or they will be undefined. See
+    # README.md for which gate to reach for.
     isWork = #{ $isWork }#
+    isWorkMac = #{ $isWorkMac }#
+    isWorkLinux = #{ $isWorkLinux }#
 #{- if $isWork }#
     claudeCodeWrapper = "#{ promptStringOnce . "claudeCodeWrapper" "Claude Code wrapper path" }#"
-#{- if and (eq .chezmoi.os "darwin") $isWork }#
+#{- if $isWorkMac }#
     corpHost = "#{ promptStringOnce . "corpHost" "Corp host for VPN connectivity check (blank to skip)" }#"
 #{- end }#
 #{- end }#

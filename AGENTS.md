@@ -44,3 +44,6 @@ configuration.
 - Comments explain *why*, not *what*. A worked-around upstream bug belongs in the
   relevant `Gotchas` section, not only in a commit message.
 - Keep platform branching in chezmoi templates rather than in per-platform files.
+- Gate machine-specific config on the `.isWork` / `.isWorkMac` / `.isWorkLinux`
+  data keys, not on a fresh `.chezmoi.os` / `.chezmoi.username` test. See
+  `README.md` for which one applies; derive new classes in `.chezmoi.toml.tmpl`.
