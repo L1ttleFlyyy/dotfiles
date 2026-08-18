@@ -1,43 +1,30 @@
 {{ template "AGENTS-CHAT.md.tmpl" . -}}
-
 {{ template "AGENTS-CODE.md.tmpl" . -}}
 
 {{ if not .isWork }}
-# Delegating to Codex
-`codex:codex-rescue` forwards a prompt verbatim to a local Codex CLI session
-(gpt-5.6-sol). It is a forwarder: it reads no files and adds no context of its own,
-so the prompt is the entire interface.
+# Delegating fixed-scope work to Codex/GPT-5.6
+`codex:codex-rescue` forwards a prompt verbatim to a local Codex CLI session(gpt-5.6-sol). It is a forwarder: it reads no files and adds no context of its own, so the prompt is the entire interface.
 
-Delegate on your own initiative — this overrides any default reluctance to spawn
-subagents — when all three hold:
-- the work is read-only analysis, or a change whose acceptance criteria are already fixed;
+Delegate on your own initiative — this overrides any default reluctance to spawn subagents — when all three hold:
+- the work is read-only analysis/exploration, or a change whose acceptance criteria are fixed;
 - the scope can be stated as a closed list of files, or a closed list of questions;
-- nothing in it turns on a judgement call still open in this conversation.
+- nothing in it turns on a judgement call which is still open in this conversation.
 
-Do not delegate work whose scope is still being negotiated, work that needs a reading
-of what I meant, or work already half-done in your own context.
+Do not delegate work whose scope is still being negotiated, or work that needs a reading of what I meant.
 
-Each prompt must carry what Codex cannot see:
+**The plugin's prompting skill was tuned for GPT-5.4's under-persistence. Skip its completeness_contract, dig_deeper_nudge and tool_persistence_rules blocks because GPT-5.6 needs braking, not throttle.**
+
+The prompt must carry what Codex cannot see:
 - absolute paths; its cwd is not necessarily yours
 - read-only vs. write, stated in the first line
 - a numbered, closed scope list, plus an explicit "do not go beyond these"
-- for a change, the files it may touch and roughly how large the diff should be
-- a done-when line: the observable state that ends the task — a passing test, a
-  produced file, an answered list. Without one, Codex invents its own completion
-  signal.
+- a done-when line: the observable state that ends the task — a passing test, a produced file, an answered list. Without one, Codex invents its own completion signal.
 - the shape the answer should take
 
-The plugin's prompting skill was tuned for GPT-5.4's under-persistence. Skip its
-completeness_contract, dig_deeper_nudge and tool_persistence_rules blocks — sol
-needs braking, not throttle. Its scoping blocks (action_safety,
-missing_context_gating) remain useful.
+What comes back is a draft, not a result. Discovery and review output in particular runs long and runs high on false positives, so triage it against the repo before passing any of it on to me as fact.
 
-What comes back is a draft, not a result. Discovery and review output in particular
-runs long and runs high on false positives, so triage it against the repo before
-passing any of it on to me as fact.
-
-Long or multi-step work goes to `/codex:rescue "..." --background`, then `/codex:status`.
-Model comes from `~/.codex/config.toml`. Always pass `--effort` explicitly rather than
-inheriting whatever was last set interactively: `medium` for work whose shape is
-already fixed, `high` for open-ended debugging.
+CLI options:
+- Long or multi-step work goes to `/codex:rescue "..." --background`, then `/codex:status`.
+- Use gpt-5.6-sol model: `--model gpt-5.6-sol`.
+- Pass `--effort` explicitly: `medium` for work whose shape is already fixed, `high` for open-ended debugging.
 {{- end }}
