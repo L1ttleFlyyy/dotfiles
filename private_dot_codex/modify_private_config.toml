@@ -1,2 +1,21 @@
 {{- /* chezmoi:modify-template */ -}}
-{{ .chezmoi.stdin | fromToml | setValueAtPath "analytics.enabled" false | setValueAtPath "features.memories" false | setValueAtPath "memories.generate_memories" false | setValueAtPath "memories.use_memories" false | setValueAtPath "memories.disable_on_external_context" true | toToml }}
+{{ .chezmoi.stdin | fromToml
+  | setValueAtPath "analytics.enabled" false
+  | setValueAtPath "approval_policy" "on-request"
+  | setValueAtPath "approvals_reviewer" "auto_review"
+  | setValueAtPath "features.default_mode_request_user_input" true
+  | setValueAtPath "features.memories" false
+  | setValueAtPath "memories.generate_memories" false
+  | setValueAtPath "memories.use_memories" false
+  | setValueAtPath "memories.disable_on_external_context" true
+  | setValueAtPath "tui.status_line" (list
+      "model-with-reasoning"
+      "current-dir"
+      "git-branch"
+      "branch-changes"
+      "approval-mode"
+      "context-remaining"
+      "weekly-limit"
+      "context-window-size")
+  | setValueAtPath "tui.status_line_use_colors" true
+  | toToml }}
