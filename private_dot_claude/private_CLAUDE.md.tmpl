@@ -21,8 +21,15 @@ Each prompt must carry what Codex cannot see:
 - absolute paths; its cwd is not necessarily yours
 - read-only vs. write, stated in the first line
 - a numbered, closed scope list, plus an explicit "do not go beyond these"
+- for a change, the files it may touch and roughly how large the diff should be
 - the shape the answer should take
 
+What comes back is a draft, not a result. Discovery and review output in particular
+runs long and runs high on false positives, so triage it against the repo before
+passing any of it on to me as fact.
+
 Long or multi-step work goes to `/codex:rescue "..." --background`, then `/codex:status`.
-Model and effort come from `~/.codex/config.toml`; pass `--effort medium` to step down.
+Model comes from `~/.codex/config.toml`. Always pass `--effort` explicitly rather than
+inheriting whatever was last set interactively: `medium` for work whose shape is
+already fixed, `high` for open-ended debugging.
 {{- end }}
