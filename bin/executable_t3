@@ -1,0 +1,47 @@
+#!/bin/sh
+# t3 - run the T3 Code CLI that the background service already installed.
+#
+# The service keeps each release under ~/.t3/runtime/versions/<version>/ and
+# records the live one in runtime/service-state.json, so the version is resolved
+# at call time rather than pinned here. Nothing in this script needs touching
+# when the service moves to a new release.
+#
+# Note: `t3 service update` reinstalls whatever version this resolves to, i.e.
+# the one already on disk. To pull a newer release use `npx t3@latest service
+# update` instead - that is the documented path and it is what rewrites the unit.
+#
+# Usage: t3 <subcommand> [flags]
+#   t3 pair --ttl 15m --label iphone    mint a pairing token + QR code
+#   t3 auth session list                 see which clients are connected
+#   t3 service status                    is the background service installed
+set -eu
+
+T3_HOME="${T3CODE_HOME:-$HOME/.t3}"
+STATE="$T3_HOME/runtime/service-state.json"
+
+VERSION=""
+if [ -r "$STATE" ]; then
+    VERSION=$(sed -n 's/.*"activeVersion"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$STATE")
+fi
+
+# No state file, or a future one that renamed the key: fall back to the newest
+# release present on disk.
+if [ -z "$VERSION" ]; then
+    VERSION=$(ls -1 "$T3_HOME/runtime/versions" 2>/dev/null | sort -V | tail -1)
+fi
+
+BIN="$T3_HOME/runtime/versions/$VERSION/node_modules/t3/dist/bin.mjs"
+if [ ! -f "$BIN" ]; then
+    echo "t3: no CLI found under $T3_HOME/runtime/versions" >&2
+    echo "t3: install the service first - npx t3@latest service install" >&2
+    exit 1
+fi
+
+# Prefer whatever node is on PATH; the brew symlink is the fallback for callers
+# with a minimal environment (systemd units, cron).
+NODE="${T3_NODE:-}"
+if [ -z "$NODE" ]; then
+    NODE=$(command -v node 2>/dev/null || echo /home/linuxbrew/.linuxbrew/bin/node)
+fi
+
+exec "$NODE" "$BIN" "$@"
