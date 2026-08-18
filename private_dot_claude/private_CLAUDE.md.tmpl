@@ -22,7 +22,15 @@ Each prompt must carry what Codex cannot see:
 - read-only vs. write, stated in the first line
 - a numbered, closed scope list, plus an explicit "do not go beyond these"
 - for a change, the files it may touch and roughly how large the diff should be
+- a done-when line: the observable state that ends the task — a passing test, a
+  produced file, an answered list. Without one, Codex invents its own completion
+  signal.
 - the shape the answer should take
+
+The plugin's prompting skill was tuned for GPT-5.4's under-persistence. Skip its
+completeness_contract, dig_deeper_nudge and tool_persistence_rules blocks — sol
+needs braking, not throttle. Its scoping blocks (action_safety,
+missing_context_gating) remain useful.
 
 What comes back is a draft, not a result. Discovery and review output in particular
 runs long and runs high on false positives, so triage it against the repo before
