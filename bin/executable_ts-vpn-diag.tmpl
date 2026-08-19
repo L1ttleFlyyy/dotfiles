@@ -1,29 +1,65 @@
 #!/bin/bash
 #
-# ts-vpn-diag — capture Tailscale / Work-VPN routing + DNS state for diagnosis.
+# ts-vpn-diag — capture Tailscale / corp-network routing + DNS state for diagnosis.
 #
-# Run this WHEN AN INTERNAL WORK-VPN SITE IS UNREACHABLE (the broken state),
-# before toggling anything. Read-only: it snapshots the routing table, interface
-# roles, the 100.64/10 owner, DNS resolver config, and name resolution +
-# reachability for one corp host, into a timestamped file you can keep/share.
+# Run this WHEN A CORP HOST IS UNREACHABLE (the broken state), before toggling
+# anything. Read-only: it snapshots the routing table, interface roles, the
+# 100.64/10 owner, the DNS resolver config (system-wide AND per-service), and name
+# resolution + reachability for one corp host, into a timestamped file you can
+# keep/share.
 #
-# Both VPNs share the 100.64/10 CGNAT range; the failure is when the global
-# 100.64/10 is owned by Tailscale (or nobody) instead of the Work VPN, so
-# Work-VPN CGNAT hosts blackhole. See fix-macos-route for the full write-up.
+# TWO FAILURE SHAPES, one shared cause: Tailscale and the corp network both live
+# in 100.64/10, and macOS allows exactly one global (unscoped) route per prefix.
+#   1. Corp reached over the WORK VPN (a second utun). Broken when the global
+#      100.64/10 is owned by Tailscale (or nobody) instead of the Work VPN, so
+#      Work-VPN CGNAT hosts blackhole. Fix: fix-macos-route. See it for the
+#      full write-up.
+#   2. Corp reached DIRECTLY over Office-WiFi, no VPN. There is no second utun, so
+#      the corp path is the PRIMARY interface and corp CGNAT rides its default
+#      route. Tailscale owning the global 100.64/10 shadows that default route and
+#      hijacks corp CGNAT the same way; fix-macos-route handles it by stripping
+#      Tailscale's /10 and leaving the global slot empty. DNS can fail
+#      independently in this shape: the Work VPN's supplemental (domain-matching)
+#      resolvers are absent, so whatever Tailscale installs under `accept-dns on`
+#      is no longer out-specified by them.
 #
 # Usage:
-#   ts-vpn-diag              capture only (safe, read-only)
-#   To APPLY the fix:        fix-macos-route
+#   ts-vpn-diag [label]      capture only (safe, read-only)
+#   To APPLY the route fix:  fix-macos-route
+#
+# The label is stamped into the filename. For shape 2, capture all three states —
+# the difference between them is the diagnosis:
+#   ts-vpn-diag office-ts-off     # Tailscale down/quit: baseline, can the corp
+#                                 #   Wi-Fi carry CGNAT and resolve at all?
+#   ts-vpn-diag office-dns-off    # Tailscale up, accept-dns off
+#   ts-vpn-diag office-dns-on     # Tailscale up, accept-dns on
+#
+# When resolution itself fails (the accept-dns-on state), pass the address the
+# host is KNOWN to have so the routing/reachability probes still run — otherwise
+# the whole second half of the capture is skipped and that state teaches nothing:
+#   CORP_IP=<known address> ts-vpn-diag office-dns-on
+#
+# If the DNS query path is still ambiguous afterwards, watch it directly (needs
+# sudo, blocks until it has 20 packets):  sudo tcpdump -ni any port 53 -c 20
 #
 # The corp host for the resolution/reachability check comes from chezmoi data
 # (prompted at install). Override per-run:  CORP_HOST=host.example.com ts-vpn-diag
 
 CORP_HOST="${CORP_HOST:-{{ if hasKey . "corpHost" }}{{ .corpHost }}{{ end }}}"
+CORP_IP="${CORP_IP:-}"
+CORP_PORTS="${CORP_PORTS:-22 443}"
 TAILSCALE_SUBNET="100.123.123"
+MAGICDNS="100.100.100.100"
 OUTDIR="$HOME/ts-vpn-diagnosis"
 
+# Optional label, into the filename: three captures of the same machine minutes
+# apart are only comparable if the file says which state each came from.
+LABEL="${1:-}"
+[ "$LABEL" = "--label" ] && LABEL="${2:-}"
+LABEL="${LABEL//[^A-Za-z0-9._-]/_}"
+
 mkdir -p "$OUTDIR"
-OUT="$OUTDIR/diag-$(date +%Y%m%d-%H%M%S).txt"
+OUT="$OUTDIR/diag${LABEL:+-$LABEL}-$(date +%Y%m%d-%H%M%S).txt"
 
 # Tee everything to both the terminal and the capture file.
 exec > >(tee "$OUT") 2>&1
@@ -33,10 +69,21 @@ run()     { echo "\$ $*"; eval "$@" 2>&1; echo; }
 
 echo "ts-vpn-diag  $(date '+%Y-%m-%d %H:%M:%S')"
 echo "capture file: $OUT"
+echo "label:        ${LABEL:-<none>}"
 echo "corp host:    ${CORP_HOST:-<none configured>}"
+[ -n "$CORP_IP" ] && echo "corp IP:      $CORP_IP  (from CORP_IP, used if resolution fails)"
 
 # --- Identify interface roles (utunN numbers shuffle across sleep/wake) ---
 section "Interface roles"
+# The primary service/interface is what carries unscoped traffic that no more
+# specific route claims — i.e. the corp path when there is no VPN.
+PRIMARY_IFACE=$(scutil <<< "show State:/Network/Global/IPv4" | awk '/PrimaryInterface/{print $3}')
+PRIMARY_SVC=$(scutil <<< "show State:/Network/Global/IPv4" | awk '/PrimaryService/{print $3}')
+# The physical carrier, which is NOT the primary interface when a full-tunnel VPN
+# is up (then the primary is a utun, which has no DHCP lease and no SSID). Taken as
+# the first non-utun interface nwi ranks as usable.
+PHYS_IFACE=$(scutil --nwi | awk '$2==":" && $3=="flags" && $1 !~ /^utun/ {print $1; exit}')
+PHYS_IFACE="${PHYS_IFACE:-en0}"
 TS_IFACE=""
 for i in $(ifconfig -l | tr ' ' '\n' | grep '^utun'); do
     if ifconfig "$i" 2>/dev/null | grep -q "inet ${TAILSCALE_SUBNET}\."; then
@@ -49,59 +96,185 @@ GLOBAL_IFACE=$(netstat -rn -f inet | awk '$1=="100.64/10" && $3 !~ /I/ {print $4
 WORKVPN_IFACE=$(netstat -rn -f inet | awk -v ts="$TS_IFACE" '$1=="100.64/10" && $4!=ts {print $4; exit}')
 SLASH10_IFACE=$(netstat -rn -f inet | awk '$1=="100.64/10"{print $4; exit}')
 SLASH10_FLAGS=$(netstat -rn -f inet | awk '$1=="100.64/10"{print $3; exit}')
+
+# The corp path: the Work VPN when it is up, otherwise the primary interface
+# (direct Office-WiFi). The verdict below keys off this rather than assuming a utun.
+if [ -n "$WORKVPN_IFACE" ]; then
+    CORP_PATH="$WORKVPN_IFACE";  CORP_PATH_KIND="Work VPN"
+else
+    CORP_PATH="$PRIMARY_IFACE";  CORP_PATH_KIND="direct, no VPN"
+fi
+
+echo "Primary interface / service:                    ${PRIMARY_IFACE:-<none>}  (${PRIMARY_SVC:-<none>})"
+echo "Physical carrier (DHCP / SSID source):          ${PHYS_IFACE}"
 echo "Tailscale interface (inet ${TAILSCALE_SUBNET}.x): ${TS_IFACE:-<none / down>}"
 echo "Work VPN interface (non-TS 100.64/10 owner):    ${WORKVPN_IFACE:-<none / down>}"
+echo "Corp path for CGNAT:                            ${CORP_PATH:-<none>}  ($CORP_PATH_KIND)"
 echo "Global 100.64/10 owned by:                      ${GLOBAL_IFACE:-<none>}  (flags ${SLASH10_FLAGS:-none})"
+# Which Wi-Fi (corp vs. home) the capture came from. macOS redacts the SSID for
+# processes without Location Services access, so treat a blank/<redacted> value as
+# normal and fall back to the DHCP lease below to tell the networks apart.
+echo "SSID:                                           $(ipconfig getsummary "$PHYS_IFACE" 2>/dev/null | awk '/ SSID :/{print $3; exit}')"
 
-# --- Verdict: the global 100.64/10 must belong to the Work VPN ---
+# --- Verdict: nothing in 100.64/10 that the corp path needs may point at Tailscale ---
 section "100.64/10 ownership verdict"
-if [ -z "$SLASH10_IFACE" ]; then
-    echo "? No 100.64/10 route at all (both VPNs down?)."
-elif [ -z "$WORKVPN_IFACE" ]; then
-    echo "• Work VPN down (no non-Tailscale 100.64/10). Global owner='${GLOBAL_IFACE:-none}'."
-    echo "  No CGNAT contention — nothing for fix-macos-route to do."
-elif [ "$GLOBAL_IFACE" = "$WORKVPN_IFACE" ]; then
-    echo "✓ HEALTHY: the Work VPN ($WORKVPN_IFACE) owns the global 100.64/10."
+if [ -z "$TS_IFACE" ]; then
+    echo "• Tailscale down — no CGNAT contention. Baseline capture: whatever fails"
+    echo "  here is NOT caused by Tailscale."
+elif [ -n "$WORKVPN_IFACE" ]; then
+    # Shape 1: both VPNs up. The Work VPN must own the global slot.
+    if [ "$GLOBAL_IFACE" = "$WORKVPN_IFACE" ]; then
+        echo "✓ HEALTHY: the Work VPN ($WORKVPN_IFACE) owns the global 100.64/10."
+    else
+        echo "✗ BROKEN: Work VPN ($WORKVPN_IFACE) is up but does NOT own the global 100.64/10"
+        echo "  (global owner='${GLOBAL_IFACE:-none}', flags='${SLASH10_FLAGS:-none}'; likely"
+        echo "  Tailscale grabbed it). Work-VPN CGNAT hosts blackhole."
+        echo "  Fix:  fix-macos-route"
+    fi
+elif [ "$GLOBAL_IFACE" = "$TS_IFACE" ]; then
+    # Shape 2: no Work VPN, so corp CGNAT has to ride the primary interface — and
+    # Tailscale is holding the only global route that would carry it.
+    echo "✗ BROKEN: no Work VPN, so corp CGNAT must ride ${PRIMARY_IFACE:-the primary interface},"
+    echo "  but Tailscale ($TS_IFACE) owns the global 100.64/10 — every corp CGNAT"
+    echo "  host is routed into the tailnet and blackholes."
+    echo "  Fix:  fix-macos-route  (strips Tailscale's /10 and leaves the global"
+    echo "  slot empty, so corp CGNAT falls to the ${PRIMARY_IFACE:-primary} default route)"
+elif [ -z "$SLASH10_IFACE" ]; then
+    echo "✓ No 100.64/10 route at all: CGNAT falls to the default route via"
+    echo "  ${PRIMARY_IFACE:-<none>}, which is what direct Office-WiFi wants."
 else
-    echo "✗ BROKEN: Work VPN ($WORKVPN_IFACE) is up but does NOT own the global 100.64/10"
-    echo "  (global owner='${GLOBAL_IFACE:-none}', flags='${SLASH10_FLAGS:-none}'; likely"
-    echo "  Tailscale grabbed it). Work-VPN CGNAT (100.74.x / 100.95.x) blackholes."
-    echo "  Fix:  fix-macos-route"
+    echo "? Global 100.64/10 owner='${GLOBAL_IFACE:-none}' (flags '${SLASH10_FLAGS:-none}'),"
+    echo "  neither Tailscale nor a Work VPN. Check the raw table below."
 fi
 
 # --- Raw routing evidence ---
-section "100.64/10 + CGNAT host routes (100.74.x / 100.95.x = Work VPN CGNAT)"
-run "netstat -rn -f inet | grep -E 'Destination|100\\.(64/10|74|95|100|123)'"
+section "100.64/10 + CGNAT host routes (corp CGNAT sits elsewhere in the /10)"
+run "netstat -rn -f inet | grep -E 'Destination|^100\\.'"
 
 section "Default routes (primary-service / scoping picture)"
 run "netstat -rn -f inet | awk 'NR<=2 || \$1==\"default\"'"
 
 # route get shows the ACTUAL interface the kernel would choose for a destination.
+# Sample the CGNAT hosts the table already knows about (kernel clones appear once
+# something has tried to reach them) rather than hard-coding a corp address.
 section "route get — which interface would actually be used"
-run "route -n get 100.74.144.76"   # a Work-VPN CGNAT host seen in captures
+CGNAT_SAMPLES=$(netstat -rn -f inet | awk \
+    '$1 ~ /^100\./ && $1 !~ /^100\.123\.123\./ && $1 != "100.100.100.100" && $1 !~ /\// {print $1}' \
+    | sort -u | head -3)
+[ -z "$CGNAT_SAMPLES" ] && echo "(no corp CGNAT host routes in the table yet — ping the corp host first)"
+for ip in $CGNAT_SAMPLES; do run "route -n get $ip"; done
 run "route -n get ${TAILSCALE_SUBNET}.8"
 
-# --- DNS: is the corp resolver reachable, and does the name resolve? ---
-section "DNS resolver configuration (look for the corp domain's resolver)"
-run "scutil --dns | grep -E 'resolver|nameserver|domain|if_index|flags' "
+# --- DNS: the whole picture, not a grep. Shape 2 turns on which resolver macOS
+#     ranks first and which interface its queries are scoped to. ---
+section "DNS resolver configuration (system view: resolver #1 is what wins)"
+run "scutil --dns"
+
+# nwi is the ranked view: which interfaces are usable for IPv4/IPv6/DNS at all.
+# Cheap, and it catches "Office-WiFi has no IPv6" style asymmetries that decide
+# whether an IPv6 upstream resolver can even be tried.
+section "Network information (interface ranking / reachability)"
+run "scutil --nwi"
+
+# Per-service dicts are where the ranking comes from: a service with
+# SupplementalMatchDomains gets consulted for those domains regardless of
+# primacy; one without them is scoped-only unless its service is primary.
+section "Per-service DNS configuration (who pushes which resolvers)"
+for key in $(scutil <<< "list State:/Network/Service/.*/DNS" | awk '{print $NF}'); do
+    echo "--- $key"
+    [ "$key" = "State:/Network/Service/${PRIMARY_SVC}/DNS" ] && echo "    (this is the PRIMARY service, ${PRIMARY_IFACE})"
+    scutil <<< "show $key"
+    echo
+done
+
+# What the network itself handed us: DNS servers, domain, and option 121
+# classless static routes (does the network push a CGNAT route of its own?).
+# Read from the physical carrier: a full-tunnel VPN utun is primary but has no lease.
+DHCP_RESOLVERS=""
+if [ -n "$PHYS_IFACE" ]; then
+    section "DHCP lease on $PHYS_IFACE (network-provided DNS / domain / static routes)"
+    run "ipconfig getpacket $PHYS_IFACE"
+    DHCP_RESOLVERS=$(ipconfig getpacket "$PHYS_IFACE" 2>/dev/null \
+        | awk -F'[{}]' '/domain_name_server/{gsub(/,/," ",$2); print $2}')
+fi
+
+# Probe every nameserver that is EITHER active or merely offered: does it answer,
+# and — the question that matters here — which interface do queries to it leave
+# by? The DHCP-offered and MagicDNS servers are probed even when absent from the
+# active config, because "Tailscale displaced the network-provided resolver" is exactly
+# the hypothesis under test, and the displaced resolver's answer is the control.
+section "Resolver probes (per nameserver: active? route out, and does it answer?)"
+ACTIVE_RESOLVERS=$(scutil --dns | awk '/nameserver\[/{print $3}' | sort -u)
+PROBE_RESOLVERS=$(printf '%s\n%s\n%s\n' "$ACTIVE_RESOLVERS" "$DHCP_RESOLVERS" \
+    "${TS_IFACE:+$MAGICDNS}" | tr ' ' '\n' | grep -v '^$' | sort -u)
+for r in $PROBE_RESOLVERS; do
+    tags=""
+    grep -qx "$r" <<< "$ACTIVE_RESOLVERS" && tags="$tags active" || tags="$tags NOT-in-active-config"
+    grep -qw "$r" <<< "$DHCP_RESOLVERS" && tags="$tags dhcp-offered"
+    [ "$r" = "$MAGICDNS" ] && tags="$tags magicdns"
+    echo "--- $r  [${tags# }]"
+    case "$r" in
+        *:*) run "route -n get -inet6 $r" ;;
+        *)   run "route -n get $r" ;;
+    esac
+    # +comments keeps the status line: "returned nothing" is ambiguous between
+    # NXDOMAIN (resolver answered, has no such name), SERVFAIL (it tried and
+    # failed) and no reply at all (unreachable) — and that is the whole question
+    # when Tailscale's catch-all resolver has displaced the corp one.
+    [ -n "$CORP_HOST" ] && run "dig +time=2 +tries=1 +nocmd +noall +comments +answer $CORP_HOST @$r"
+done
 
 if [ -n "$CORP_HOST" ]; then
     section "Name resolution for $CORP_HOST"
     run "dscacheutil -q host -a name $CORP_HOST"      # via the system resolver (what apps see)
-    run "dig +short +time=2 +tries=1 $CORP_HOST"      # direct (may differ from the system path)
-    RESOLVED_IP=$(dig +short +time=2 +tries=1 "$CORP_HOST" 2>/dev/null | grep -E '^[0-9]+\.' | head -1)
+    run "dig +time=2 +tries=1 +nocmd +noall +comments +answer $CORP_HOST"
+    # The system path is authoritative for "what ping/curl will do": it honours
+    # supplemental domain-matching resolvers. A bare `dig` does NOT — it reads only
+    # the first nameserver out of resolv.conf, which under `accept-dns on` is
+    # Tailscale's MagicDNS, and that answers nothing for corp names even when
+    # resolution is working fine. So take the address from dscacheutil.
+    RESOLVED_IP=$(dscacheutil -q host -a name "$CORP_HOST" 2>/dev/null \
+        | awk '/^ip_address:/{print $2; exit}')
     echo "resolved IP: ${RESOLVED_IP:-<resolution FAILED>}"
-    [ -n "$RESOLVED_IP" ] && run "route -n get $RESOLVED_IP"
 else
     section "Name resolution"
     echo "(no corp host configured — set CORP_HOST, or the chezmoi 'corpHost' data, to enable)"
 fi
 
-# --- Reachability: separate Tailscale vs Work VPN ---
+# Target for the reachability probes: what we just resolved, else the address
+# supplied by hand. Keeps the routing half of the capture useful in the states
+# where DNS is the thing that is broken.
+TARGET_IP="${RESOLVED_IP:-$CORP_IP}"
+
+# --- Reachability: separate Tailscale, the corp path, and the kernel's choice ---
+# The decisive pair is unbound vs bound-to-the-corp-path. ping/nc -b use
+# IP_BOUND_IF, which forces the interface and so bypasses the global-route
+# contention entirely:
+#   unbound FAILS + bound to corp path WORKS  -> route hijack (a routing fix works)
+#   both FAIL                                 -> the corp path itself can't reach
+#                                                the host (VPN-only ACL, or ICMP
+#                                                filtered — compare ping vs TCP)
 section "Reachability"
 run "ping -c1 -W2 ${TAILSCALE_SUBNET}.8   # a Tailscale peer"
-if [ -n "${RESOLVED_IP:-}" ]; then
-    run "nc -z -G 3 $RESOLVED_IP 443 && echo 'TCP 443 OPEN' || echo 'TCP 443 unreachable'"
+if [ -n "$TARGET_IP" ]; then
+    echo "target: $TARGET_IP  (corp path = ${CORP_PATH:-<none>}, $CORP_PATH_KIND)"
+    run "route -n get $TARGET_IP"
+    run "ping -c2 -W2 $TARGET_IP                    # unbound: follows the global route"
+    # More than one port, because a closed port is indistinguishable from an
+    # unreachable one here: 443 is shut on this corp host even when everything
+    # works, so a single-port probe reads as a false negative.
+    for p in $CORP_PORTS; do
+        run "nc -z -G 3 $TARGET_IP $p && echo 'TCP $p OPEN' || echo 'TCP $p no answer'"
+    done
+    if [ -n "$CORP_PATH" ]; then
+        run "ping -c2 -W2 -b $CORP_PATH $TARGET_IP      # forced onto the corp path"
+        for p in $CORP_PORTS; do
+            run "nc -b $CORP_PATH -z -G 3 $TARGET_IP $p && echo 'TCP $p OPEN (bound)' || echo 'TCP $p no answer (bound)'"
+        done
+    fi
+else
+    echo "(no target IP: resolution failed and CORP_IP is unset — rerun with"
+    echo " CORP_IP=<known address> to still exercise the routing probes)"
 fi
 
 section "VPN service status"
@@ -109,4 +282,9 @@ run "scutil --nc list"
 
 echo
 echo "Done. Capture saved to: $OUT"
-echo "If the verdict says BROKEN, run:  fix-macos-route"
+if [ -n "$WORKVPN_IFACE" ]; then
+    echo "If the verdict says BROKEN, run:  fix-macos-route"
+else
+    echo "No Work VPN in this capture: the global 100.64/10 slot should be EMPTY;"
+    echo "if Tailscale holds it, run:  fix-macos-route"
+fi

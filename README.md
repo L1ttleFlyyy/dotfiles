@@ -25,6 +25,14 @@ CLIs.
 - [`docs/search-ignore-layers.md`](docs/search-ignore-layers.md) — which of the
   four ignore files `fd`, `rg` and `git` each read, why `~/.ignore` only takes
   effect when the search starts at `$HOME`, and what belongs in which layer.
+- [`bin/fix-macos-route`](bin/executable_fix-macos-route) and
+  [`bin/ts-vpn-diag`](bin/executable_ts-vpn-diag.tmpl) — Tailscale versus the corp
+  network over the shared 100.64/10 CGNAT range on macOS: why only one unscoped
+  route per prefix exists, why the fix constrains Tailscale rather than detecting
+  the corp network, and how the read-only capture tool is meant to be used. Both
+  carry their write-ups in the file header. Real hostnames, resolver addresses and
+  capture transcripts stay in `docs/local/` (untracked); these files say only "Work
+  VPN" and "Office-WiFi" and read the one value they need from chezmoi data.
 - [`AGENTS.md`](AGENTS.md) — instructions for coding agents working in this
   repository. `CLAUDE.md` is a pointer to it.
 

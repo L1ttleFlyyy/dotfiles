@@ -1,37 +1,53 @@
 #!/bin/bash
 
-# Fix Tailscale / Work-VPN routing contention over the shared 100.64/10 CGNAT
+# Fix Tailscale / corp-network routing contention over the shared 100.64/10 CGNAT
 # range on macOS.
 #
 # SYMPTOM
-#   After sleep/wake, internal Work-VPN sites go unreachable while Tailscale
-#   still works; toggling Tailscale off/on "fixes" it.
+#   Internal corp hosts go unreachable while Tailscale still works; toggling
+#   Tailscale off/on "fixes" it. Two shapes, same cause:
+#     * after sleep/wake with the Work VPN connected;
+#     * on Office-WiFi with no VPN at all, where the corp network is reached
+#       directly over the physical interface.
 #
 # ROOT CAUSE
-#   Internal Work-VPN hosts resolve to CGNAT addresses (e.g. 100.95.70.243), and
-#   BOTH VPNs live in 100.64/10: Tailscale's tailnet is 100.123.123.0/24; the
-#   Work VPN's hosts sit elsewhere in 100.64/10 (100.74.x / 100.95.x). macOS
-#   allows exactly ONE global (unscoped) route per prefix, assigned by
-#   claim/primary order. Whichever VPN wins the global 100.64/10 owns ALL
-#   unmatched CGNAT traffic; the loser gets an interface-SCOPED (UCSI) route that
-#   unscoped traffic ignores. When Tailscale comes up first (common after wake)
-#   it wins the slot, and every Work-VPN CGNAT host is routed into Tailscale and
-#   blackholes.
+#   Internal corp hosts live at CGNAT addresses, and so does Tailscale: the
+#   tailnet is a /24 inside 100.64/10 while corp hosts sit elsewhere in the same
+#   /10. macOS allows exactly ONE global (unscoped) route per prefix, assigned by
+#   claim order. Whichever claimant wins the global 100.64/10 owns ALL unmatched
+#   CGNAT traffic; the loser gets an interface-SCOPED (UCSI) route that unscoped
+#   traffic ignores. When Tailscale wins that slot, every corp CGNAT host is
+#   routed into the tailnet and blackholes.
 #
-# KEY FINDINGS  (learned by capturing route tables; see ~/ts-vpn-diagnosis)
-#   * NOT a DNS problem. The Work VPN's DNS resolver works fine; only the route
-#     to the resolved CGNAT IP is wrong.
-#   * Deleting the offending global route does NOT auto-promote the scoped
-#     survivor — macOS leaves a hole and traffic falls to the en0 default. The fix
-#     must EXPLICITLY add the global route on the Work interface (steps 2+3).
-#   * The 100.74.x/100.95.x host routes are kernel-CLONED from the global /10
-#     parent (flag 'W'), not installed by the VPN; they follow whoever owns the
-#     global /10. Clones stranded on the Tailscale interface are themselves
-#     interface-scoped, so unscoped lookups ignore them (proven with `route get`).
+# KEY FINDINGS  (from captured route tables; see ts-vpn-diag)
+#   * NOT a DNS problem. Corp DNS resolves fine; only the route to the resolved
+#     CGNAT address is wrong. There IS a separate, independent DNS fault in the
+#     no-VPN case, caused by resolver specificity rather than routing — recorded
+#     in the local findings doc, and out of scope for this script.
+#   * Deleting the offending global route does NOT auto-promote a scoped
+#     survivor — macOS leaves a hole and traffic falls to the physical default
+#     route. Whether that hole hurts depends on the Work VPN's tunnel mode:
+#     harmless full-tunnel (its own default catches CGNAT), fatal split-tunnel
+#     (CGNAT escapes to the local router). So the global route must be added back
+#     EXPLICITLY on the Work interface.
+#   * On Office-WiFi with no VPN the hole is exactly what we want: the network
+#     pushes no CGNAT route (no DHCP option 121), so corp CGNAT rides the plain
+#     default route to the local gateway. Verified by capture: with Tailscale
+#     quit there is no 100.64/10 route at all and corp CGNAT is reachable.
+#   * Corp CGNAT host routes are kernel-CLONED from the global /10 parent (flag
+#     'W'), not installed by any VPN; they follow whoever owns the global /10.
+#     Clones stranded on the Tailscale interface are themselves interface-scoped,
+#     so unscoped lookups ignore them (proven with `route get`).
+#   * Tailscale has no persistent route reconciler. Re-grabs of the /10 follow
+#     sleep/wake, which resets network state and makes Tailscale re-arm its
+#     routes — hence a poll rather than a one-shot fix, and hence no tug-of-war
+#     when we take the /10 away.
+#   * The tailnet range is pinned to a single /24 by the control server, so the
+#     /24 override provably covers every peer. If that ever changes, peers
+#     outside the /24 become unreachable under this invariant.
 #   * Interface names (utunN) shuffle across sleep/wake — never hard-code them.
-#     Identify by routing facts only: Tailscale by its 100.123.123.x address, the
-#     Work VPN as the OTHER utun holding a 100.64/10 route — no site-specific
-#     signature, so nothing identifying is baked in.
+#     Identify by routing facts only: Tailscale by its tailnet address, the Work
+#     VPN as the OTHER utun holding a 100.64/10 route.
 #   * The Tailscale CLI is never used to read state (it forks the GUI app, is slow,
 #     and crashes on this machine); the routing table is the source of truth.
 #
@@ -39,14 +55,24 @@
 #   * Reconcile to a declarative invariant — don't prevent by ordering. A control
 #     loop that drives the table to the desired state is cause-agnostic (handles
 #     wrong startup order, sleep/wake, and network changes alike). Re-sequencing
-#     the VPNs (disconnect/reconnect Work first) was rejected: it drops every
-#     connection, can trigger the Work VPN's interactive auth/MFA, and a root
-#     daemon can't drive the corp VPN client anyway.
-#   * Detect trouble by OWNERSHIP (does the Work VPN own the global /10?), not by
-#     counting 100.64 routes: a count is both incomplete (a lone scoped route is
-#     broken too) and false-positives on the healthy Work-global + TS-scoped case.
-#   * Work-VPN-gated: do nothing when the Work VPN is down. Tailscale owning the
-#     broad /10 by itself is correct, and fighting it just churns its reconciler.
+#     the VPNs was rejected: it drops every connection, can trigger the Work VPN's
+#     interactive auth/MFA, and a root daemon can't drive the corp VPN client.
+#   * Constrain TAILSCALE, don't chase the corp path. Earlier versions gated on
+#     "the Work VPN is up" and did nothing otherwise, on the theory that Tailscale
+#     owning the broad /10 alone is correct. That is false on Office-WiFi, where
+#     the corp path is the physical interface and Tailscale's /10 shadows the
+#     default route. Keying the invariant on what Tailscale may hold — its /24 and
+#     nothing else — covers both shapes with no corp-network detection, no SSID or
+#     DHCP heuristics, and no site-specific data in this file.
+#   * Hand the freed slot to the Work VPN when there is one, because of the
+#     no-auto-promote finding above. With no Work VPN, leave the slot empty on
+#     purpose: the physical default route is the correct carrier.
+#   * Never issue a delete that could hit someone else's route: the scoped delete
+#     runs only when a Tailscale-scoped /10 actually exists, and the unscoped
+#     delete only when Tailscale owns the global one. An unconditional
+#     `route delete -ifscope` is suspected of falling back to the unscoped route
+#     when no scoped route exists, which under this always-on invariant would
+#     churn the Work VPN's live route on every poll.
 #   * Leave stale clones in place and VERIFY forwarding with `route get` rather
 #     than deleting them — one fewer mutating step, and the check is a safety net
 #     for the rare non-scoped stray that would actually hijack a host.
@@ -54,10 +80,13 @@
 #     has no reliable route-change/wake event for a daemon, and this script is a
 #     silent no-op when healthy, so polling is cheap.
 #
-# The invariant enforced (when both VPNs are up):
-#   * Work VPN owns the GLOBAL (unscoped) 100.64/10.
-#   * Tailscale keeps ONLY 100.123.123.0/24 (+ its native 100.100.100.100/32).
-#   Then 100.123.123.x (specific) -> Tailscale, all other CGNAT -> Work VPN.
+# The invariant enforced whenever Tailscale is up:
+#   * Tailscale holds the tailnet /24 (plus its own 100.100.100.100/32, untouched)
+#     and NO 100.64/10, scoped or global.
+#   * If a Work VPN is up and the global 100.64/10 slot is empty, the Work VPN
+#     gets it.
+#   Then tailnet addresses (specific) -> Tailscale, all other CGNAT -> the Work
+#   VPN when connected, otherwise the physical default route.
 #
 # USAGE
 #   fix-macos-route          interactive (asks before touching routes)
@@ -92,6 +121,21 @@ log() {
     fi
 }
 
+# route_cmd(): run a mutating route command, echo its output interactively, and
+# accumulate it for the failure path. Without this, `say` swallows every route
+# error in daemon mode and a "Fix incomplete" line cannot say why.
+ROUTE_LOG=""
+route_cmd() {
+    local out
+    out=$(sudo route "$@" 2>&1) || true
+    if [ -n "$out" ]; then
+        ROUTE_LOG="${ROUTE_LOG}
+    \$ route $*
+      ${out}"
+        say "$out"
+    fi
+}
+
 # --- Detect the Tailscale interface (also the "Tailscale up" gate) ---
 # The authoritative signal is a utun carrying an address in the tailnet subnet;
 # we never shell out to the (slow, GUI-forking) Tailscale CLI.
@@ -103,17 +147,18 @@ for iface in $(ifconfig -l | tr ' ' '\n' | grep '^utun'); do
 done
 
 if [ -z "$TS_IFACE" ]; then
-    # Tailscale down: no contention possible (the Work VPN owns 100.64/10 alone).
-    # Nothing to do, and exit 0 keeps the daemon quiet / un-throttled.
+    # Tailscale down: it cannot be holding anything, and this invariant only
+    # constrains Tailscale. exit 0 keeps the daemon quiet / un-throttled.
     say "✗ Tailscale not up (no utun with ${TAILSCALE_SUBNET}.x) — nothing to do"
     exit 0
 fi
 
 # --- Detect the Work VPN interface: the OTHER utun (not Tailscale) that holds a
-#     100.64/10 route. The Work VPN is the only other CGNAT participant, so when
-#     it is up it always carries a 100.64/10 (global or interface-scoped). Empty
-#     when the Work VPN is down. Keyed on CGNAT facts only — no site-specific
-#     signature — and never on utunN names, which shuffle across sleep/wake. ---
+#     100.64/10 route. Empty when the Work VPN is down — and also in the rare case
+#     where it is up but carries no /10 of its own; then the slot is left empty and
+#     CGNAT falls to the default route, which is right for a full tunnel and wrong
+#     for a split tunnel. Captures have not shown that case. Keyed on CGNAT facts
+#     only — never on utunN names, which shuffle across sleep/wake. ---
 WORK_IFACE=$(netstat -rn -f inet | awk -v ts="$TS_IFACE" \
     '$1=="100.64/10" && $4!=ts {print $4; exit}')
 
@@ -122,47 +167,65 @@ WORK_IFACE=$(netstat -rn -f inet | awk -v ts="$TS_IFACE" \
 global_slash10_iface() {
     netstat -rn -f inet | awk '$1=="100.64/10" && $3 !~ /I/ {print $4; exit}'
 }
-# Is the Tailscale subnet override (100.123.123.0/24) present?
+# Does an interface-SCOPED 100.64/10 exist on $1? (Guards the -ifscope delete.)
+scoped_slash10_present() {
+    netstat -rn -f inet | awk -v want="$1" \
+        '$1=="100.64/10" && $4==want && $3 ~ /I/ {f=1} END{exit !f}'
+}
+# Is the Tailscale subnet override (tailnet /24) present?
 override_present() {
     netstat -rn -f inet | awk -v ov="${TAILSCALE_SUBNET}/24" \
         '$1==ov {f=1} END{exit !f}'
 }
 
-# --- Conflict gate: is the healthy invariant violated? ---
-# Only act when BOTH VPNs are up. With the Work VPN down there is no CGNAT
-# contention — Tailscale owning the broad 100.64/10 is its correct native state,
-# and fighting it would just churn against Tailscale's own route reconciler.
-# A Tailscale *scoped* /10 is harmless (unscoped traffic ignores it), so the gate
-# keys only on the real invariant: the Work VPN must own the GLOBAL 100.64/10,
-# and Tailscale must keep its tailnet override.
+# --- Conflict gate: is the invariant violated? ---
+# Note this no longer gates on the Work VPN being up: Tailscale holding the broad
+# /10 is wrong even with no VPN, because on Office-WiFi the corp path is the
+# physical interface and the /10 shadows its default route.
+# Sets CONFLICT_REASON, because four different deviations reach the fix path and
+# the ownership figures alone don't say which one fired — sleep/wake typically
+# trips the scoped-route or missing-override clause while ownership looks fine.
+CONFLICT_REASON=""
 has_conflict() {
-    [ -z "$WORK_IFACE" ] && return 1                              # Work VPN down
-    [ "$(global_slash10_iface)" != "$WORK_IFACE" ] && return 0    # Work lacks global /10
-    override_present || return 0                                  # TS override missing
+    CONFLICT_REASON=""
+    if [ "$(global_slash10_iface)" = "$TS_IFACE" ]; then
+        CONFLICT_REASON="tailscale-owns-global-slash10"; return 0
+    fi
+    if scoped_slash10_present "$TS_IFACE"; then
+        CONFLICT_REASON="tailscale-scoped-slash10"; return 0
+    fi
+    if ! override_present; then
+        CONFLICT_REASON="tailnet-override-missing"; return 0
+    fi
+    # The no-auto-promote hole: a Work VPN is up but nobody owns the global slot.
+    if [ -n "$WORK_IFACE" ] && [ -z "$(global_slash10_iface)" ]; then
+        CONFLICT_REASON="global-slot-empty-with-work-vpn"; return 0
+    fi
     return 1
 }
 
-say "=== Tailscale / Work-VPN routing fix ==="
+say "=== Tailscale / corp routing fix ==="
 say "Tailscale interface: $TS_IFACE"
 say "Work VPN interface:  ${WORK_IFACE:-<down>}"
 say ""
 
 if ! has_conflict; then
-    if [ -z "$WORK_IFACE" ]; then
-        say "✓ Work VPN down — no CGNAT contention, nothing to do"
-    else
-        say "✓ Routing is healthy — Work VPN ($WORK_IFACE) owns the global 100.64/10"
-    fi
+    say "✓ Invariant holds — Tailscale on ${TAILSCALE_SUBNET}.0/24 only, global 100.64/10 owner=$(global_slash10_iface || echo none)"
     exit 0
 fi
-log "⚠ Routing conflict: Tailscale=$TS_IFACE Work=$WORK_IFACE (global 100.64/10 owner=$(global_slash10_iface || true))"
+log "⚠ Routing conflict [$CONFLICT_REASON]: Tailscale=$TS_IFACE Work=${WORK_IFACE:-<down>} (global 100.64/10 owner=$(global_slash10_iface || true))"
 
 if [ "$CONFIRMED" = false ]; then
     say ""
     say "Plan:"
     say "  1. ensure ${TAILSCALE_SUBNET}.0/24 -> $TS_IFACE   (so Tailscale keeps its tailnet)"
-    say "  2. remove any 100.64/10 owned by $TS_IFACE        (stop Tailscale hijacking CGNAT)"
-    [ -n "$WORK_IFACE" ] && say "  3. add global 100.64/10 -> $WORK_IFACE            (Work VPN owns CGNAT)"
+    say "  2. remove any 100.64/10 held by $TS_IFACE        (stop Tailscale hijacking CGNAT)"
+    if [ -n "$WORK_IFACE" ]; then
+        say "  3. add global 100.64/10 -> $WORK_IFACE            (Work VPN owns CGNAT)"
+    else
+        say "  3. leave the global 100.64/10 slot empty        (no Work VPN: the physical"
+        say "     default route is the correct carrier for corp CGNAT)"
+    fi
     say ""
     read -p "Proceed? [N/y]: " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -172,81 +235,98 @@ if [ "$CONFIRMED" = false ]; then
 fi
 
 # --- Step 1: give Tailscale its specific tailnet route BEFORE stripping its /10,
-#             so it never loses connectivity to its own peers mid-fix. ---
+#             so it never loses connectivity to its own peers mid-fix. On
+#             Office-WiFi Tailscale ships no /24 at all — the /10 IS its peer
+#             route — so this step is what keeps the tailnet alive there. ---
 if ! override_present; then
-    out=$(sudo route add -net "${TAILSCALE_SUBNET}.0/24" -interface "$TS_IFACE" 2>&1) || true
-    [ -n "$out" ] && say "$out"
+    route_cmd add -net "${TAILSCALE_SUBNET}.0/24" -interface "$TS_IFACE"
     say "✓ Added ${TAILSCALE_SUBNET}.0/24 -> $TS_IFACE"
 fi
 
-# --- Step 2: strip any 100.64/10 owned by Tailscale (interface-safe). ---
-# The scoped route is interface-safe to delete via -ifscope.
-out=$(sudo route delete -net 100.64.0.0/10 -ifscope "$TS_IFACE" 2>&1) || true
-[ -n "$out" ] && say "$out"
-# The global route is shared territory: delete it ONLY if Tailscale owns it
-# (never the Work VPN's). `route delete` without -ifscope hits the global one.
+# --- Step 2: strip any 100.64/10 held by Tailscale. ---
+# Both deletes are conditional: an -ifscope delete with no scoped route present is
+# suspected of falling back to the unscoped route, and that unscoped route may
+# belong to the Work VPN.
+if scoped_slash10_present "$TS_IFACE"; then
+    route_cmd delete -net 100.64.0.0/10 -ifscope "$TS_IFACE"
+    say "✓ Removed Tailscale's scoped 100.64/10"
+fi
 if [ "$(global_slash10_iface)" = "$TS_IFACE" ]; then
-    out=$(sudo route delete -net 100.64.0.0/10 2>&1) || true
-    [ -n "$out" ] && say "$out"
+    route_cmd delete -net 100.64.0.0/10
     say "✓ Removed Tailscale's global 100.64/10"
 fi
 
-# --- Step 3: ensure the Work VPN owns the GLOBAL 100.64/10. ---
+# --- Step 3: ensure the Work VPN owns the GLOBAL 100.64/10, if there is one. ---
 # macOS will NOT auto-promote the Work VPN's scoped route, so we add the global
-# one explicitly. After Step 2 the global slot is free if Tailscale had held it.
+# one explicitly. With no Work VPN we deliberately add nothing: corp CGNAT then
+# rides the physical default route, which is how Office-WiFi behaves with
+# Tailscale quit entirely.
 if [ -n "$WORK_IFACE" ]; then
     owner=$(global_slash10_iface)
     if [ -n "$owner" ] && [ "$owner" != "$WORK_IFACE" ]; then
-        # Should not happen (only TS/Work contend, and we just removed TS's).
         say "⚠ Global 100.64/10 owned by $owner (not Work VPN $WORK_IFACE) — leaving it"
     elif [ -z "$owner" ]; then
         # Remove the Work VPN's interface-scoped /10 first so the global add is
         # deterministic (no EEXIST ambiguity); that scoped route wasn't carrying
         # unscoped traffic anyway. Then install the global on the same interface.
-        out=$(sudo route delete -net 100.64.0.0/10 -ifscope "$WORK_IFACE" 2>&1) || true
-        [ -n "$out" ] && say "$out"
-        out=$(sudo route add -net 100.64.0.0/10 -interface "$WORK_IFACE" 2>&1) || true
-        [ -n "$out" ] && say "$out"
+        if scoped_slash10_present "$WORK_IFACE"; then
+            route_cmd delete -net 100.64.0.0/10 -ifscope "$WORK_IFACE"
+        fi
+        route_cmd add -net 100.64.0.0/10 -interface "$WORK_IFACE"
         say "✓ Added global 100.64/10 -> $WORK_IFACE"
     fi
 fi
 
 # --- Verify the invariant and report ---
-# Past the gate WORK_IFACE is always set. Healthy == Work owns the global /10 and
-# Tailscale still has its tailnet override. A leftover Tailscale *scoped* /10 is
-# harmless, so we don't fail on it.
+# Healthy == Tailscale holds no /10 at all, its tailnet override is present, and
+# when a Work VPN is up it owns the global slot. With no Work VPN an empty global
+# slot is the desired end state, not a failure.
 final_owner=$(global_slash10_iface)
-if [ "$final_owner" != "$WORK_IFACE" ] || ! override_present; then
-    log "✗ Fix incomplete: global 100.64/10 owner=${final_owner:-none}, override present=$(override_present && echo yes || echo no)"
+failed=""
+[ "$final_owner" = "$TS_IFACE" ]     && failed="$failed tailscale-still-owns-global"
+scoped_slash10_present "$TS_IFACE"   && failed="$failed tailscale-scoped-slash10-remains"
+override_present                     || failed="$failed override-missing"
+if [ -n "$WORK_IFACE" ] && [ "$final_owner" != "$WORK_IFACE" ]; then
+    failed="$failed work-vpn-lacks-global"
+fi
+if [ -n "$failed" ]; then
+    log "✗ Fix incomplete:$failed (global 100.64/10 owner=${final_owner:-none}, Work=${WORK_IFACE:-<down>})"
+    [ -n "$ROUTE_LOG" ] && log "route commands issued:$ROUTE_LOG"
     exit 1
 fi
-log "✓ Fixed: global 100.64/10 -> $WORK_IFACE, Tailscale on ${TAILSCALE_SUBNET}.0/24"
+if [ -n "$WORK_IFACE" ]; then
+    log "✓ Fixed: global 100.64/10 -> $WORK_IFACE, Tailscale on ${TAILSCALE_SUBNET}.0/24 only"
+else
+    log "✓ Fixed: global 100.64/10 left empty (no Work VPN; physical default carries CGNAT), Tailscale on ${TAILSCALE_SUBNET}.0/24 only"
+fi
 
 # --- Confirm CGNAT host routing (read-only; we do NOT flush stale entries) ---
-# While Tailscale held the global /10, Work-VPN CGNAT hosts (100.74.x / 100.95.x)
-# got cloned as /32 routes onto the Tailscale interface. Those clones are
-# interface-scoped, so unscoped lookups ignore them and they're harmless — but
-# rather than delete them (one more moving part), we just verify via `route get`
-# that each actually FORWARDS to the Work VPN. This also catches the rare case of
-# a stray that is NOT scoped and would genuinely hijack a host.
+# While Tailscale held the global /10, corp CGNAT hosts got cloned as /32 routes
+# onto the Tailscale interface. Those clones are interface-scoped, so unscoped
+# lookups ignore them and they're harmless — but rather than delete them (one more
+# moving part), we just verify via `route get` that each actually FORWARDS off the
+# Tailscale interface. This also catches the rare non-scoped stray that would
+# genuinely hijack a host.
 # Set = /32 host routes (no mask shown) on the Tailscale interface within 100.x,
-# excluding the tailnet (100.123.123.x) and MagicDNS (100.100.100.100), which
-# legitimately belong to Tailscale.
-strays=$(netstat -rn -f inet | awk -v ts="$TS_IFACE" \
-    '$4==ts && $1 ~ /^100\./ && $1 !~ /^100\.123\.123\./ && $1 != "100.100.100.100" && $1 !~ /\// {print $1}')
+# excluding the tailnet and MagicDNS, which legitimately belong to Tailscale.
+strays=$(netstat -rn -f inet | awk -v ts="$TS_IFACE" -v tn="$TAILSCALE_SUBNET" \
+    '$4==ts && $1 ~ /^100\./ && index($1, tn ".")!=1 && $1 != "100.100.100.100" && $1 !~ /\// {print $1}')
 say ""
-say "=== CGNAT host routing (strays on $TS_IFACE must resolve to $WORK_IFACE) ==="
+say "=== CGNAT host routing (strays on $TS_IFACE must forward off it) ==="
 bad=""
 for ip in $strays; do
     dest_if=$(route -n get "$ip" 2>/dev/null | awk '/interface:/{print $2}')
-    if [ "$dest_if" = "$WORK_IFACE" ]; then
+    # With a Work VPN the clone must land on it; without one, anything but the
+    # Tailscale interface is correct (it will be the physical default route).
+    if { [ -n "$WORK_IFACE" ] && [ "$dest_if" = "$WORK_IFACE" ]; } ||
+       { [ -z "$WORK_IFACE" ] && [ -n "$dest_if" ] && [ "$dest_if" != "$TS_IFACE" ]; }; then
         say "  ✓ $ip -> $dest_if"
     else
-        say "  ✗ $ip -> ${dest_if:-?} (expected $WORK_IFACE)"
+        say "  ✗ $ip -> ${dest_if:-?} (expected ${WORK_IFACE:-anything but $TS_IFACE})"
         bad="$bad $ip"
     fi
 done
 [ -z "$strays" ] && say "  (none)"
 if [ -n "$bad" ]; then
-    log "⚠ Stray CGNAT /32s on $TS_IFACE not forwarding to $WORK_IFACE:$bad"
+    log "⚠ Stray CGNAT /32s on $TS_IFACE not forwarding off it:$bad"
 fi

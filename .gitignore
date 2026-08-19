@@ -1,0 +1,10 @@
+# Local, untracked notes and captures.
+#
+# Everything under docs/local/ records the real corp hostnames, resolver
+# addresses and network details that the tracked files deliberately refer to only
+# as "Work VPN" and "Office-WiFi". It stays out of git; the tracked scripts read
+# site-specific values from chezmoi data (`corpHost`) instead.
+#
+# docs/ is already excluded from the chezmoi target state by .chezmoiignore, so
+# nothing here is deployed to $HOME either.
+docs/local/
