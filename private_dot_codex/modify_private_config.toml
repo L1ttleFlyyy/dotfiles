@@ -13,10 +13,9 @@
       "current-dir"
       "git-branch"
       "branch-changes"
-      "approval-mode"
       "context-remaining"
-      "weekly-limit"
-      "context-window-size")
+      "five-hour-limit"
+      "weekly-limit")
   | setValueAtPath "tui.status_line_use_colors" true
   | setValueAtPath "hooks.UserPromptSubmit" (list
       (dict "hooks" (list
