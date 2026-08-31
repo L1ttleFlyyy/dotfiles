@@ -18,4 +18,7 @@
       "weekly-limit"
       "context-window-size")
   | setValueAtPath "tui.status_line_use_colors" true
+  | setValueAtPath "hooks.UserPromptSubmit" (list
+      (dict "hooks" (list
+        (dict "type" "command" "command" "~/.codex/hooks/inject_unslop.sh"))))
   | toToml }}
