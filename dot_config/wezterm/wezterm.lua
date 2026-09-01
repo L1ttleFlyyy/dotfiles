@@ -102,9 +102,23 @@ wezterm.on("format-window-title", function(tab)
   return basename(pane.foreground_process_name or pane.title)
 end)
 
--- Alt-leading shortcuts (macOS Cmd muscle memory)
 local act = wezterm.action
-config.keys = {
+if wezterm.target_triple:find("windows") then
+  -- AutoHotkey owns the user-facing Left Alt namespace on Windows. These
+  -- unreachable function keys are its action interface for operations without
+  -- an equivalent default WezTerm shortcut.
+  config.keys = {
+    { key = "F13", mods = "NONE", action = act.QuitApplication },
+    { key = "F14", mods = "NONE", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
+    { key = "F15", mods = "NONE", action = act.SplitVertical({ domain = "CurrentPaneDomain" }) },
+    { key = "F16", mods = "NONE", action = act.CloseCurrentPane({ confirm = false }) },
+    { key = "F17", mods = "NONE", action = act.ActivateTab(8) },
+    { key = "F18", mods = "NONE", action = act.ActivateTabRelative(-1) },
+    { key = "F19", mods = "NONE", action = act.ActivateTabRelative(1) },
+  }
+else
+  -- Alt-leading shortcuts (macOS Cmd muscle memory)
+  config.keys = {
   -- Copy / Paste
   { key = "c", mods = "ALT", action = act.CopyTo("Clipboard") },
   { key = "v", mods = "ALT", action = act.PasteFrom("Clipboard") },
@@ -164,6 +178,7 @@ config.keys = {
   { key = "j", mods = "ALT", action = act.ActivatePaneDirection("Down") },
   { key = "k", mods = "ALT", action = act.ActivatePaneDirection("Up") },
   { key = "l", mods = "ALT", action = act.ActivatePaneDirection("Right") },
-}
+  }
+end
 
 return config
