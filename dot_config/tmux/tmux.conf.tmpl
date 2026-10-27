@@ -129,6 +129,15 @@ set-hook -g client-attached 'if -F "#{&&:#{!=:#{client_theme},},#{!=:#{client_th
     set -gF @client_theme_current "#{client_theme}"
     run-shell -b "bash ~/.config/tmux/tmux-client-theme.sh #{client_theme}"
 }'
+{{- if .isWorkLinux }}
+
+# Forward SIGWINCH to bwrap-sandboxed Claude Code processes on resize, so
+# Claude's TUI redraws correctly over SSH.
+# client-resized: terminal window resize
+# window-layout-changed: pane split/resize (e.g., teammate agent spawn)
+set-hook -g client-resized 'run-shell "pkill -WINCH -f claude-linux-x64"'
+set-hook -g window-layout-changed 'run-shell "pkill -WINCH -f claude-linux-x64"'
+{{- end }}
 
 # List of plugins
 set -g @plugin 'tmux-plugins/tpm'
