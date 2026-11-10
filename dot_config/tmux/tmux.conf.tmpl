@@ -135,8 +135,14 @@ set-hook -g client-attached 'if -F "#{&&:#{!=:#{client_theme},},#{!=:#{client_th
 # Claude's TUI redraws correctly over SSH.
 # client-resized: terminal window resize
 # window-layout-changed: pane split/resize (e.g., teammate agent spawn)
+# client-attached / client-session-changed: attach or switch-client, which
+# don't fire client-resized when the terminal size is unchanged.
+# client-attached uses index [1] because [0] is the theme hook above; an
+# unindexed set-hook would replace it.
 set-hook -g client-resized 'run-shell "pkill -WINCH -f claude-linux-x64"'
 set-hook -g window-layout-changed 'run-shell "pkill -WINCH -f claude-linux-x64"'
+set-hook -g client-attached[1] 'run-shell "pkill -WINCH -f claude-linux-x64"'
+set-hook -g client-session-changed 'run-shell "pkill -WINCH -f claude-linux-x64"'
 {{- end }}
 
 # List of plugins
