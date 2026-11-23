@@ -31,8 +31,6 @@ Library/
 {{- end }}
 
 {{- if ne (dig "id" "none" .chezmoi.osRelease) "bazzite" }}
-.var/app/
-.config/environment.d/
 .bashrc.d/
 .config/konsolerc
 .local/share/konsole/
