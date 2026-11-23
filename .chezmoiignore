@@ -34,6 +34,7 @@ Library/
 .bashrc.d/
 .config/konsolerc
 .local/share/konsole/
+.local/bin/konsole
 {{- end }}
 
 {{- if not .isWorkMac }}
