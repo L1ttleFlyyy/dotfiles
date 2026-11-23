@@ -55,7 +55,7 @@ logic lives in exactly one place. Pick the narrowest flag that is true of the
 thing being gated: `.isWorkLinux` for the RHEL toolchain (SystemVerilog,
 Perforce, the bash-sourcing zsh startup path), `.isWorkMac` for corp-VPN
 plumbing under `bin/`, and `.isWork` for policy that applies to work as such —
-no Codex plugin, no personal git identity, English-only agent instructions.
+no personal git identity, English-only agent instructions.
 
 Because the keys are captured at init time, a config that predates one of them
 leaves it undefined and every template referencing it fails to render. Re-run

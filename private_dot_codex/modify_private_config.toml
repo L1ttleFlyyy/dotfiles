@@ -1,5 +1,24 @@
 {{- /* chezmoi:modify-template */ -}}
-{{ .chezmoi.stdin | fromToml
+{{- $data := .chezmoi.stdin | fromToml -}}
+{{- /* Remove the retired unslop hook while preserving other prompt hooks. */ -}}
+{{- $groups := list -}}
+{{- range (dig "hooks" "UserPromptSubmit" (list) $data) -}}
+{{-   $hooks := list -}}
+{{-   range (dig "hooks" (list) .) -}}
+{{-     if not (contains ".codex/hooks/inject_unslop.sh" (dig "command" "" .)) -}}
+{{-       $hooks = append $hooks . -}}
+{{-     end -}}
+{{-   end -}}
+{{-   if $hooks -}}
+{{-     $groups = append $groups (setValueAtPath "hooks" $hooks .) -}}
+{{-   end -}}
+{{- end -}}
+{{- if $groups -}}
+{{-   $data = setValueAtPath "hooks.UserPromptSubmit" $groups $data -}}
+{{- else -}}
+{{-   $_ := unset (dig "hooks" (dict) $data) "UserPromptSubmit" -}}
+{{- end }}
+{{ $data
   | setValueAtPath "analytics.enabled" false
   | setValueAtPath "approval_policy" "on-request"
   | setValueAtPath "approvals_reviewer" "auto_review"
@@ -17,7 +36,4 @@
       "five-hour-limit"
       "weekly-limit")
   | setValueAtPath "tui.status_line_use_colors" true
-  | setValueAtPath "hooks.UserPromptSubmit" (list
-      (dict "hooks" (list
-        (dict "type" "command" "command" "bash ~/.codex/hooks/inject_unslop.sh"))))
   | toToml }}
