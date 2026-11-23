@@ -1,0 +1,7 @@
+# Bazzite: the login shell stays bash (chsh to a Homebrew shell is unsupported
+# on the atomic image), so interactive login shells (SSH, TTY) hand over to
+# Homebrew's zsh here. Non-interactive sessions (scp, rsync, `ssh host cmd`)
+# stay in bash, and a `bash` typed inside zsh is not a login shell, so it stays.
+if [[ $- == *i* ]] && shopt -q login_shell && [ -x /home/linuxbrew/.linuxbrew/bin/zsh ]; then
+    exec /home/linuxbrew/.linuxbrew/bin/zsh -l
+fi

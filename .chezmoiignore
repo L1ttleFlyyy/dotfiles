@@ -33,6 +33,7 @@ Library/
 {{- if ne (dig "id" "none" .chezmoi.osRelease) "bazzite" }}
 .var/app/
 .config/environment.d/
+.bashrc.d/
 {{- end }}
 
 {{- if not .isWorkMac }}
