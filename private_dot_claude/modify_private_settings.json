@@ -21,7 +21,13 @@
 
 {{- /* Codex CLI plugin retired: drop leftovers from older applies. */ -}}
 {{- $_ := unset (dig "enabledPlugins" (dict) $data) "codex@openai-codex" -}}
-{{- $_ := unset (dig "extraKnownMarketplaces" (dict) $data) "openai-codex" }}
+{{- $_ := unset (dig "extraKnownMarketplaces" (dict) $data) "openai-codex" -}}
+
+{{- /* No feedback drafts from the model; keep machine-local deny rules. */ -}}
+{{- $deny := dig "permissions" "deny" (list) $data -}}
+{{- if not (has "SendFeedback" $deny) -}}
+{{-   $deny = append $deny "SendFeedback" -}}
+{{- end }}
 
 {{ $data
   | setValueAtPath "env.ENABLE_CLAUDEAI_MCP_SERVERS" "false"
@@ -32,6 +38,7 @@
   | setValueAtPath "skipDangerousModePermissionPrompt" true
   | setValueAtPath "remoteControlAtStartup" true
   | setValueAtPath "permissions.defaultMode" "auto"
+  | setValueAtPath "permissions.deny" $deny
   | setValueAtPath "tui" "fullscreen"
   | setValueAtPath "attribution.commit" ""
   | setValueAtPath "attribution.pr" ""
